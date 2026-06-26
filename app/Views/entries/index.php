@@ -79,6 +79,9 @@ use SimpleVault\Models\Entry;
                         </td>
                         <td><small><?= e(substr($entry->updatedAt, 0, 10)) ?></small></td>
                         <td class="text-end text-nowrap">
+                            <button class="btn btn-sm btn-link p-0 me-2" type="button"
+                                    data-copy-password="/entries/<?= e($entry->uuid) ?>/copy"
+                                    title="Copy password to clipboard">Copy password</button>
                             <a class="btn btn-sm btn-link p-0 me-2" href="/entries/<?= e($entry->uuid) ?>/edit">Edit</a>
                             <button class="btn btn-sm btn-link p-0" type="submit"
                                     formaction="/entries/<?= e($entry->uuid) ?>/duplicate" formmethod="post">Duplicate</button>

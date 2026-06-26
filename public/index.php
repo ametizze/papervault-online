@@ -71,6 +71,7 @@ $router->post('/entries/bulk', [EntryController::class, 'bulk'], ['auth', 'unloc
 $router->get('/entries/{id}', [EntryController::class, 'show'], ['auth', 'unlock']);
 $router->get('/entries/{id}/edit', [EntryController::class, 'edit'], ['auth', 'unlock']);
 $router->post('/entries/{id}/update', [EntryController::class, 'update'], ['auth', 'unlock']);
+$router->post('/entries/{id}/copy', [EntryController::class, 'copyPassword'], ['auth', 'unlock']);
 $router->post('/entries/{id}/duplicate', [EntryController::class, 'duplicate'], ['auth', 'unlock']);
 $router->post('/entries/{id}/archive', [EntryController::class, 'archive'], ['auth', 'unlock']);
 $router->post('/entries/{id}/delete', [EntryController::class, 'destroy'], ['auth', 'unlock']);

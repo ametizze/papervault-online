@@ -191,6 +191,30 @@ final class EntryController extends Controller
     }
 
     /**
+     * Return a single entry's decrypted password as JSON, for the quick-copy
+     * button on the list. Requires auth + an unlocked vault + CSRF, and the
+     * entry must belong to the current user. The plaintext is never placed in
+     * the list HTML; it is fetched on demand and not cached.
+     */
+    public function copyPassword(Request $request, array $params): Response
+    {
+        $uuid = (string) $params['id'];
+        if (!Uuid::isValid($uuid)) {
+            return Response::json(['error' => 'not_found'], 404);
+        }
+        $row = $this->entries->findForUser($this->userId(), $uuid);
+        if ($row === null) {
+            return Response::json(['error' => 'not_found'], 404);
+        }
+
+        $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
+        $this->audit->log($this->userId(), 'entry_password_copied', $request->ip, $request->userAgent);
+
+        return Response::json(['password' => (string) ($payload['password'] ?? '')])
+            ->withHeader('Cache-Control', 'no-store');
+    }
+
+    /**
      * Apply an action (archive/unarchive/delete) to many selected entries.
      */
     public function bulk(Request $request): Response

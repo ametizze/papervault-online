@@ -3,6 +3,40 @@
 (function () {
     'use strict';
 
+    // Write text to the clipboard, with a fallback for non-secure contexts
+    // (e.g. plain http during local testing where navigator.clipboard is absent).
+    function copyToClipboard(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        return new Promise(function (resolve, reject) {
+            try {
+                var ta = document.createElement('textarea');
+                ta.value = text;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                var ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                ok ? resolve() : reject(new Error('copy failed'));
+            } catch (err) {
+                reject(err);
+            }
+        });
+    }
+
+    // Briefly show feedback text on a button, then restore its label.
+    function flashButton(btn, message) {
+        var original = btn.getAttribute('data-original') || btn.textContent;
+        btn.setAttribute('data-original', original);
+        btn.textContent = message;
+        setTimeout(function () {
+            btn.textContent = original;
+        }, 1200);
+    }
+
     // Copy-to-clipboard buttons: <button data-copy-target="#selector">
     document.addEventListener('click', function (event) {
         var btn = event.target.closest('[data-copy-target]');
@@ -15,13 +49,45 @@
             return;
         }
         var value = 'value' in target ? target.value : target.textContent;
-        navigator.clipboard.writeText(value).then(function () {
-            var original = btn.getAttribute('data-original') || btn.textContent;
-            btn.setAttribute('data-original', original);
-            btn.textContent = 'Copied!';
-            setTimeout(function () {
-                btn.textContent = original;
-            }, 1200);
+        copyToClipboard(value)
+            .then(function () { flashButton(btn, 'Copied!'); })
+            .catch(function () { flashButton(btn, 'Failed'); });
+    });
+
+    // Quick "copy password" from a list row. The plaintext is NOT in the page:
+    // it is fetched on demand from a CSRF-protected, vault-gated endpoint and
+    // written straight to the clipboard.
+    // Usage: <button type="button" data-copy-password="/entries/{uuid}/copy">
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-copy-password]');
+        if (!btn) {
+            return;
+        }
+        event.preventDefault();
+        var url = btn.getAttribute('data-copy-password');
+        var form = btn.closest('form');
+        var tokenEl = form ? form.querySelector('input[name="_csrf"]') : null;
+        var token = tokenEl ? tokenEl.value : '';
+
+        btn.disabled = true;
+        fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: '_csrf=' + encodeURIComponent(token)
+        }).then(function (res) {
+            if (!res.ok) {
+                throw new Error('request failed');
+            }
+            return res.json();
+        }).then(function (data) {
+            return copyToClipboard((data && data.password) || '');
+        }).then(function () {
+            flashButton(btn, 'Copied!');
+        }).catch(function () {
+            flashButton(btn, 'Failed');
+        }).finally(function () {
+            btn.disabled = false;
         });
     });
 
