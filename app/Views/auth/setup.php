@@ -3,17 +3,23 @@
 use SimpleVault\Core\Csrf;
 
 $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedback d-block">' . e($errors[$f]) . '</div>' : '';
+
+// Editable copy lives in config/app.php ('setup_text', overridable via .env).
+$text = config('setup_text', []);
+$minAccount = (int) config('min_account_password_length');
+$minMaster = (int) config('min_master_password_length');
+$accountHelp = sprintf((string) ($text['account_password_help'] ?? ''), $minAccount);
+$masterHelp = sprintf((string) ($text['master_password_help'] ?? ''), $minMaster);
 ?>
 <div class="row justify-content-center">
     <div class="col-md-7 col-lg-6">
         <h1 class="h3 mb-3">Welcome to <?= e(config('app_name')) ?></h1>
-        <p class="text-muted">Create the first account and your encrypted vault.</p>
+        <p class="text-muted"><?= e($text['intro'] ?? '') ?></p>
 
         <div class="card warning-banner mb-4">
             <div class="card-body">
-                <strong>Important — no recovery.</strong>
-                <p class="mb-0">If you lose your Master Password or Key File, your saved
-                passwords and notes <strong>cannot be recovered</strong>. There is no reset.</p>
+                <strong><?= e($text['recovery_title'] ?? '') ?></strong>
+                <p class="mb-0"><?= e($text['recovery_warning'] ?? '') ?></p>
             </div>
         </div>
 
@@ -31,7 +37,7 @@ $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedb
             <div class="mb-3">
                 <label class="form-label">Account password</label>
                 <input type="password" name="account_password" class="form-control" required>
-                <div class="form-text">Used to log in. Minimum <?= (int) config('min_account_password_length') ?> characters.</div>
+                <div class="form-text"><?= e($accountHelp) ?></div>
                 <?= $err('account_password') ?>
             </div>
 
@@ -40,7 +46,7 @@ $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedb
             <div class="mb-3">
                 <label class="form-label">Master Password</label>
                 <input type="password" name="master_password" class="form-control" required>
-                <div class="form-text">Minimum <?= (int) config('min_master_password_length') ?> characters. It is never stored.</div>
+                <div class="form-text"><?= e($masterHelp) ?></div>
                 <?= $err('master_password') ?>
             </div>
             <div class="mb-3">
@@ -52,15 +58,14 @@ $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedb
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="use_key_file" id="use_key_file" value="1">
                 <label class="form-check-label" for="use_key_file">
-                    Generate an optional Key File (second factor). You will download it now and must
-                    upload it every time you unlock. Store it separately from your password.
+                    <?= e($text['key_file_help'] ?? '') ?>
                 </label>
             </div>
 
             <div class="form-check mb-3">
                 <input class="form-check-input" type="checkbox" name="recovery_ack" id="recovery_ack" value="1" required>
                 <label class="form-check-label" for="recovery_ack">
-                    I understand there is <strong>no recovery</strong> if I lose my Master Password or Key File.
+                    <?= e($text['recovery_ack_label'] ?? '') ?>
                 </label>
                 <?= $err('recovery_ack') ?>
             </div>

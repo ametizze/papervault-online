@@ -43,4 +43,25 @@ return [
     // Minimum password lengths.
     'min_account_password_length' => 10,
     'min_master_password_length' => 12,
+
+    // Editable UI text for the setup screen. Change these freely (here or via the
+    // matching .env keys). "%d" is replaced with the configured minimum length.
+    'setup_text' => [
+        'intro' => env('SETUP_INTRO', 'Create the first account and your encrypted vault.'),
+        'recovery_title' => env('SETUP_RECOVERY_TITLE', 'Important — no recovery.'),
+        'recovery_warning' => env(
+            'SETUP_RECOVERY_WARNING',
+            'If you lose your Master Password or Key File, your saved passwords and notes cannot be recovered. There is no reset.'
+        ),
+        'account_password_help' => env('SETUP_ACCOUNT_PASSWORD_HELP', 'Used to log in. Minimum %d characters.'),
+        'master_password_help' => env('SETUP_MASTER_PASSWORD_HELP', 'Minimum %d characters. It is never stored.'),
+        'key_file_help' => env(
+            'SETUP_KEY_FILE_HELP',
+            'Generate an optional Key File (second factor). You will download it now and must upload it every time you unlock. Store it separately from your password.'
+        ),
+        'recovery_ack_label' => env(
+            'SETUP_RECOVERY_ACK_LABEL',
+            'I understand there is no recovery if I lose my Master Password or Key File.'
+        ),
+    ],
 ];
