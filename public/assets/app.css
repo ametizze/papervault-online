@@ -1,0 +1,72 @@
+/* SimpleVault custom styles layered on top of Bootstrap 5. */
+
+:root {
+    --sv-accent: #4f46e5;
+}
+
+body {
+    background-color: #f6f7fb;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.vault-state {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.vault-state.locked {
+    color: #dc3545;
+}
+
+.vault-state.unlocked {
+    color: #198754;
+}
+
+.card {
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.tag-badge {
+    font-weight: 500;
+}
+
+.markdown-body {
+    word-wrap: break-word;
+}
+
+.markdown-body pre {
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+.markdown-body code {
+    background: rgba(110, 118, 129, 0.15);
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+}
+
+.markdown-body pre code {
+    background: transparent;
+    padding: 0;
+}
+
+.secret-field {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.warning-banner {
+    border-left: 4px solid #f0ad4e;
+}
+
+footer.app-footer {
+    color: #98a2b3;
+    font-size: 0.8rem;
+}

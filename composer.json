@@ -1,0 +1,30 @@
+{
+  "name": "private/simplevault",
+  "description": "A small self-hosted PHP password manager with encrypted Markdown notes.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.3",
+    "ext-sodium": "*",
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "ext-zip": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "SimpleVault\\": "app/"
+    },
+    "files": [
+      "app/helpers.php"
+    ]
+  },
+  "scripts": {
+    "migrate": "php scripts/migrate.php",
+    "install": "php scripts/install.php",
+    "test": "php tests/run.php"
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}

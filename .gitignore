@@ -1,0 +1,28 @@
+# Dependencies
+/vendor/
+
+# Environment
+.env
+
+# Database
+/database/database.sqlite
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
+
+# Runtime storage (never commit secrets or user data)
+/storage/backups/*
+/storage/exports/*
+/storage/temp/*
+/storage/logs/*
+!/storage/backups/.gitkeep
+!/storage/exports/.gitkeep
+!/storage/temp/.gitkeep
+!/storage/logs/.gitkeep
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
