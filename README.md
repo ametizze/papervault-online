@@ -106,6 +106,9 @@ File, if enabled). The decrypted Vault Key is held in your server-side session
 only, and is removed on logout, on manual **Lock Vault**, and automatically after
 `VAULT_AUTO_LOCK_MINUTES` of inactivity.
 
+The optional **Key File** (how to generate, use, store, and what happens if you
+lose it) has its own guide: [`docs/KEY_FILE.md`](docs/KEY_FILE.md).
+
 ## Markdown Notes
 
 Notes store encrypted Markdown plus optional `client`, `project`, and `tags`.
