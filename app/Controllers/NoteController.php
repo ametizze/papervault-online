@@ -160,6 +160,69 @@ final class NoteController extends Controller
     }
 
     /**
+     * Duplicate a note: decrypt the original, store a copy with a new UUID.
+     */
+    public function duplicate(Request $request, array $params): Response
+    {
+        $uuid = (string) $params['id'];
+        if (!Uuid::isValid($uuid)) {
+            return $this->notFound();
+        }
+        $row = $this->notes->findForUser($this->userId(), $uuid);
+        if ($row === null) {
+            return $this->notFound();
+        }
+
+        $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
+        $payload['title'] = mb_substr((string) ($payload['title'] ?? 'Untitled') . ' (copy)', 0, 200);
+
+        $encrypted = $this->crypto->encryptJson($payload, $this->vaultKey());
+        $newUuid = Uuid::v4();
+        $this->notes->create($this->userId(), $newUuid, $encrypted['ciphertext'], $encrypted['nonce'], (bool) $row['favorite']);
+        $this->audit->log($this->userId(), 'note_duplicated', $request->ip, $request->userAgent);
+
+        $this->flash('success', 'Note duplicated. You can edit the copy now.');
+        return $this->redirect('/notes/' . $newUuid . '/edit');
+    }
+
+    /**
+     * Apply an action (archive/unarchive/delete) to many selected notes.
+     */
+    public function bulk(Request $request): Response
+    {
+        $action = $request->string('action');
+        $uuids = $request->input('uuids', []);
+
+        if (!is_array($uuids) || $uuids === []) {
+            $this->flash('warning', 'No notes were selected.');
+            return $this->redirect('/notes');
+        }
+        if (!in_array($action, ['archive', 'unarchive', 'delete'], true)) {
+            $this->flash('danger', 'Unknown bulk action.');
+            return $this->redirect('/notes');
+        }
+
+        $count = 0;
+        foreach ($uuids as $uuid) {
+            $uuid = (string) $uuid;
+            if (!Uuid::isValid($uuid) || !$this->notes->existsByUuid($this->userId(), $uuid)) {
+                continue;
+            }
+            if ($action === 'delete') {
+                $this->notes->delete($this->userId(), $uuid);
+            } else {
+                $this->notes->setArchived($this->userId(), $uuid, $action === 'archive');
+            }
+            $count++;
+        }
+
+        $this->audit->log($this->userId(), 'notes_bulk_' . $action, $request->ip, $request->userAgent);
+        $this->flash('info', $count . ' ' . ($count === 1 ? 'note' : 'notes') . ' updated.');
+
+        return $this->redirect('/notes');
+    }
+
+    /**
      * Export a single note as a plaintext Markdown file download.
      */
     public function exportMarkdown(Request $request, array $params): Response

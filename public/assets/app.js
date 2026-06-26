@@ -45,15 +45,68 @@
         }
     });
 
-    // Confirmation prompts for destructive forms: <form data-confirm="message">
+    // Confirmation prompts. Supports both a form-level data-confirm and a
+    // submit-button-level data-confirm (the clicked button wins).
     document.addEventListener('submit', function (event) {
-        var form = event.target.closest('[data-confirm]');
-        if (!form) {
+        var source = (event.submitter && event.submitter.hasAttribute('data-confirm'))
+            ? event.submitter
+            : event.target.closest('[data-confirm]');
+        if (!source) {
             return;
         }
-        if (!window.confirm(form.getAttribute('data-confirm'))) {
+        if (!window.confirm(source.getAttribute('data-confirm'))) {
             event.preventDefault();
         }
+    });
+
+    // Select-all checkbox: <input data-check-all="#form-selector">
+    document.addEventListener('change', function (event) {
+        var master = event.target.closest('[data-check-all]');
+        if (!master) {
+            return;
+        }
+        var scope = document.querySelector(master.getAttribute('data-check-all'));
+        if (!scope) {
+            return;
+        }
+        scope.querySelectorAll('input[type="checkbox"][data-row-check]').forEach(function (cb) {
+            // Only toggle rows that are currently visible (respect filtering).
+            var row = cb.closest('tr');
+            if (!row || row.style.display !== 'none') {
+                cb.checked = master.checked;
+            }
+        });
+        updateSelectedCount();
+    });
+
+    // Keep the "N selected" counter in sync as individual rows change.
+    document.addEventListener('change', function (event) {
+        if (event.target.closest('[data-row-check]')) {
+            updateSelectedCount();
+        }
+    });
+
+    function updateSelectedCount() {
+        document.querySelectorAll('[data-selected-count]').forEach(function (out) {
+            var form = out.closest('form') || document;
+            var checked = form.querySelectorAll('input[type="checkbox"][data-row-check]:checked').length;
+            out.textContent = checked;
+        });
+    }
+
+    // Live row filter: <input data-filter-target="#tbody-selector">
+    document.querySelectorAll('[data-filter-target]').forEach(function (input) {
+        var tbody = document.querySelector(input.getAttribute('data-filter-target'));
+        if (!tbody) {
+            return;
+        }
+        input.addEventListener('input', function () {
+            var q = input.value.trim().toLowerCase();
+            tbody.querySelectorAll('tr').forEach(function (row) {
+                var text = (row.getAttribute('data-search') || row.textContent || '').toLowerCase();
+                row.style.display = (q === '' || text.indexOf(q) !== -1) ? '' : 'none';
+            });
+        });
     });
 
     // Live tag preview / character counters: <textarea data-counter="#out">

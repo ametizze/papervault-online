@@ -164,6 +164,69 @@ final class EntryController extends Controller
         return $this->redirect('/entries');
     }
 
+    /**
+     * Duplicate an entry: decrypt the original, store a copy with a new UUID.
+     */
+    public function duplicate(Request $request, array $params): Response
+    {
+        $uuid = (string) $params['id'];
+        if (!Uuid::isValid($uuid)) {
+            return $this->notFound();
+        }
+        $row = $this->entries->findForUser($this->userId(), $uuid);
+        if ($row === null) {
+            return $this->notFound();
+        }
+
+        $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
+        $payload['title'] = mb_substr((string) ($payload['title'] ?? 'Untitled') . ' (copy)', 0, 200);
+
+        $encrypted = $this->crypto->encryptJson($payload, $this->vaultKey());
+        $newUuid = Uuid::v4();
+        $this->entries->create($this->userId(), $newUuid, $encrypted['ciphertext'], $encrypted['nonce'], (bool) $row['favorite']);
+        $this->audit->log($this->userId(), 'entry_duplicated', $request->ip, $request->userAgent);
+
+        $this->flash('success', 'Entry duplicated. You can edit the copy now.');
+        return $this->redirect('/entries/' . $newUuid . '/edit');
+    }
+
+    /**
+     * Apply an action (archive/unarchive/delete) to many selected entries.
+     */
+    public function bulk(Request $request): Response
+    {
+        $action = $request->string('action');
+        $uuids = $request->input('uuids', []);
+
+        if (!is_array($uuids) || $uuids === []) {
+            $this->flash('warning', 'No entries were selected.');
+            return $this->redirect('/entries');
+        }
+        if (!in_array($action, ['archive', 'unarchive', 'delete'], true)) {
+            $this->flash('danger', 'Unknown bulk action.');
+            return $this->redirect('/entries');
+        }
+
+        $count = 0;
+        foreach ($uuids as $uuid) {
+            $uuid = (string) $uuid;
+            if (!Uuid::isValid($uuid) || !$this->entries->existsByUuid($this->userId(), $uuid)) {
+                continue;
+            }
+            if ($action === 'delete') {
+                $this->entries->delete($this->userId(), $uuid);
+            } else {
+                $this->entries->setArchived($this->userId(), $uuid, $action === 'archive');
+            }
+            $count++;
+        }
+
+        $this->audit->log($this->userId(), 'entries_bulk_' . $action, $request->ip, $request->userAgent);
+        $this->flash('info', $count . ' ' . ($count === 1 ? 'entry' : 'entries') . ' updated.');
+
+        return $this->redirect('/entries');
+    }
+
     // --- Helpers -----------------------------------------------------------
 
     /**

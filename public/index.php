@@ -66,9 +66,12 @@ $router->post('/vault/lock', [VaultController::class, 'lock'], ['auth']);
 $router->get('/entries', [EntryController::class, 'index'], ['auth', 'unlock']);
 $router->get('/entries/create', [EntryController::class, 'create'], ['auth', 'unlock']);
 $router->post('/entries', [EntryController::class, 'store'], ['auth', 'unlock']);
+// Bulk action must be declared before the dynamic {id} routes.
+$router->post('/entries/bulk', [EntryController::class, 'bulk'], ['auth', 'unlock']);
 $router->get('/entries/{id}', [EntryController::class, 'show'], ['auth', 'unlock']);
 $router->get('/entries/{id}/edit', [EntryController::class, 'edit'], ['auth', 'unlock']);
 $router->post('/entries/{id}/update', [EntryController::class, 'update'], ['auth', 'unlock']);
+$router->post('/entries/{id}/duplicate', [EntryController::class, 'duplicate'], ['auth', 'unlock']);
 $router->post('/entries/{id}/archive', [EntryController::class, 'archive'], ['auth', 'unlock']);
 $router->post('/entries/{id}/delete', [EntryController::class, 'destroy'], ['auth', 'unlock']);
 
@@ -80,6 +83,7 @@ $router->get('/notes', [NoteController::class, 'index'], ['auth', 'unlock']);
 $router->get('/notes/create', [NoteController::class, 'create'], ['auth', 'unlock']);
 $router->post('/notes', [NoteController::class, 'store'], ['auth', 'unlock']);
 // Static note sub-pages must be declared before the dynamic {id} route.
+$router->post('/notes/bulk', [NoteController::class, 'bulk'], ['auth', 'unlock']);
 $router->get('/notes/export', [ImportExportController::class, 'notesExportPage'], ['auth', 'unlock']);
 $router->post('/notes/export', [ImportExportController::class, 'exportNotesMarkdown'], ['auth', 'unlock']);
 $router->get('/notes/import', [ImportExportController::class, 'notesImportPage'], ['auth', 'unlock']);
@@ -87,6 +91,7 @@ $router->post('/notes/import', [ImportExportController::class, 'importNotesMarkd
 $router->get('/notes/{id}', [NoteController::class, 'show'], ['auth', 'unlock']);
 $router->get('/notes/{id}/edit', [NoteController::class, 'edit'], ['auth', 'unlock']);
 $router->post('/notes/{id}/update', [NoteController::class, 'update'], ['auth', 'unlock']);
+$router->post('/notes/{id}/duplicate', [NoteController::class, 'duplicate'], ['auth', 'unlock']);
 $router->post('/notes/{id}/archive', [NoteController::class, 'archive'], ['auth', 'unlock']);
 $router->post('/notes/{id}/delete', [NoteController::class, 'destroy'], ['auth', 'unlock']);
 $router->get('/notes/{id}/export-md', [NoteController::class, 'exportMarkdown'], ['auth', 'unlock']);
