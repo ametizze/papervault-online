@@ -62,6 +62,9 @@ If you enable a Key File, it becomes a required second factor for unlocking. Its
 contents are never stored server-side. **If a required Key File is lost, the vault
 cannot be unlocked**, even with the correct Master Password.
 
+See [`docs/KEY_FILE.md`](docs/KEY_FILE.md) for how to generate, use, store, and
+recover-or-not a Key File.
+
 ## Backups
 
 - **Encrypted full-vault backup** (`/export`): contains only encrypted data and

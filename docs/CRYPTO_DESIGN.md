@@ -66,6 +66,8 @@ never used as an encryption key and never stored in the session.
   `master_password . ':' . hex(generichash(material))`.
 - Validated on every use (type, version, base64, minimum length). Never stored;
   the transient upload is deleted immediately after reading.
+- For the user-facing guide (generate, use, store, lose), see
+  [`KEY_FILE.md`](KEY_FILE.md).
 
 ## Storage Layout
 
