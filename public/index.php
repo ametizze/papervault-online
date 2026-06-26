@@ -92,6 +92,7 @@ $router->post('/notes/import', [ImportExportController::class, 'importNotesMarkd
 $router->get('/notes/{id}', [NoteController::class, 'show'], ['auth', 'unlock']);
 $router->get('/notes/{id}/edit', [NoteController::class, 'edit'], ['auth', 'unlock']);
 $router->post('/notes/{id}/update', [NoteController::class, 'update'], ['auth', 'unlock']);
+$router->post('/notes/{id}/copy', [NoteController::class, 'copyMarkdown'], ['auth', 'unlock']);
 $router->post('/notes/{id}/duplicate', [NoteController::class, 'duplicate'], ['auth', 'unlock']);
 $router->post('/notes/{id}/archive', [NoteController::class, 'archive'], ['auth', 'unlock']);
 $router->post('/notes/{id}/delete', [NoteController::class, 'destroy'], ['auth', 'unlock']);

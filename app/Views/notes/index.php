@@ -80,6 +80,9 @@ use SimpleVault\Models\Note;
                         </td>
                         <td><small><?= e(substr($note->updatedAt, 0, 10)) ?></small></td>
                         <td class="text-end text-nowrap">
+                            <button class="btn btn-sm btn-link p-0 me-2" type="button"
+                                    data-copy-fetch="/notes/<?= e($note->uuid) ?>/copy"
+                                    title="Copy Markdown to clipboard">Copy markdown</button>
                             <a class="btn btn-sm btn-link p-0 me-2" href="/notes/<?= e($note->uuid) ?>/edit">Edit</a>
                             <button class="btn btn-sm btn-link p-0" type="submit"
                                     formaction="/notes/<?= e($note->uuid) ?>/duplicate" formmethod="post">Duplicate</button>

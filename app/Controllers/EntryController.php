@@ -210,7 +210,7 @@ final class EntryController extends Controller
         $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
         $this->audit->log($this->userId(), 'entry_password_copied', $request->ip, $request->userAgent);
 
-        return Response::json(['password' => (string) ($payload['password'] ?? '')])
+        return Response::json(['value' => (string) ($payload['password'] ?? '')])
             ->withHeader('Cache-Control', 'no-store');
     }
 

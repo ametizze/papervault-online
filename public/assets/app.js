@@ -54,17 +54,17 @@
             .catch(function () { flashButton(btn, 'Failed'); });
     });
 
-    // Quick "copy password" from a list row. The plaintext is NOT in the page:
-    // it is fetched on demand from a CSRF-protected, vault-gated endpoint and
-    // written straight to the clipboard.
-    // Usage: <button type="button" data-copy-password="/entries/{uuid}/copy">
+    // Quick "copy from a list row" without putting the secret in the page:
+    // the value is fetched on demand from a CSRF-protected, vault-gated endpoint
+    // (which returns {"value": "..."}) and written straight to the clipboard.
+    // Usage: <button type="button" data-copy-fetch="/entries/{uuid}/copy">
     document.addEventListener('click', function (event) {
-        var btn = event.target.closest('[data-copy-password]');
+        var btn = event.target.closest('[data-copy-fetch]');
         if (!btn) {
             return;
         }
         event.preventDefault();
-        var url = btn.getAttribute('data-copy-password');
+        var url = btn.getAttribute('data-copy-fetch');
         var form = btn.closest('form');
         var tokenEl = form ? form.querySelector('input[name="_csrf"]') : null;
         var token = tokenEl ? tokenEl.value : '';
@@ -81,7 +81,7 @@
             }
             return res.json();
         }).then(function (data) {
-            return copyToClipboard((data && data.password) || '');
+            return copyToClipboard((data && data.value) || '');
         }).then(function () {
             flashButton(btn, 'Copied!');
         }).catch(function () {

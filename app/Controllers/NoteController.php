@@ -186,6 +186,30 @@ final class NoteController extends Controller
     }
 
     /**
+     * Return a single note's decrypted Markdown as JSON, for the quick-copy
+     * button on the list. Requires auth + an unlocked vault + CSRF, and the
+     * note must belong to the current user. The plaintext is never placed in
+     * the list HTML; it is fetched on demand and not cached.
+     */
+    public function copyMarkdown(Request $request, array $params): Response
+    {
+        $uuid = (string) $params['id'];
+        if (!Uuid::isValid($uuid)) {
+            return Response::json(['error' => 'not_found'], 404);
+        }
+        $row = $this->notes->findForUser($this->userId(), $uuid);
+        if ($row === null) {
+            return Response::json(['error' => 'not_found'], 404);
+        }
+
+        $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
+        $this->audit->log($this->userId(), 'note_markdown_copied', $request->ip, $request->userAgent);
+
+        return Response::json(['value' => (string) ($payload['markdown'] ?? '')])
+            ->withHeader('Cache-Control', 'no-store');
+    }
+
+    /**
      * Apply an action (archive/unarchive/delete) to many selected notes.
      */
     public function bulk(Request $request): Response
