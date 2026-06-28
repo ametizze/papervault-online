@@ -52,7 +52,12 @@ $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedb
         </div>
         <div class="col-md-4">
             <label class="form-label">Expires</label>
-            <input type="date" name="expiresAt" class="form-control" value="<?= $val('expiresAt') ?>">
+            <input type="date" id="note-expires" name="expiresAt" class="form-control" value="<?= $val('expiresAt') ?>">
+            <div class="btn-group btn-group-sm mt-1" role="group" aria-label="Quick deadline">
+                <button type="button" class="btn btn-outline-secondary" data-due-days="7" data-due-target="#note-expires">+7d</button>
+                <button type="button" class="btn btn-outline-secondary" data-due-days="14" data-due-target="#note-expires">+14d</button>
+                <button type="button" class="btn btn-outline-secondary" data-due-days="30" data-due-target="#note-expires">+30d</button>
+            </div>
         </div>
 
         <?= View::renderPartial('partials/_markdown_field', [

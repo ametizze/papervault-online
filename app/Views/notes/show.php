@@ -10,7 +10,7 @@ use SimpleVault\Core\View;
             <?= View::renderPartial('partials/_status_badge', ['status' => $note->status()]) ?>
         </h1>
         <div class="text-muted small d-flex flex-wrap align-items-center gap-2">
-            <?php if ($note->ticket() !== ''): ?><span><i class="bi bi-ticket-perforated me-1"></i><strong><?= e($note->ticket()) ?></strong></span><?php endif; ?>
+            <?php if ($note->ticket() !== ''): ?><span><i class="bi bi-ticket-perforated me-1"></i><strong id="note-ticket"><?= e($note->ticket()) ?></strong><button class="btn btn-sm btn-link p-0 ms-1 align-baseline" type="button" data-copy-target="#note-ticket" title="Copy ticket reference"><i class="bi bi-clipboard"></i></button></span><?php endif; ?>
             <?php if ($note->client() !== ''): ?><span><i class="bi bi-person me-1"></i><?= e($note->client()) ?></span><?php endif; ?>
             <?php if ($note->project() !== ''): ?><span><i class="bi bi-folder me-1"></i><?= e($note->project()) ?></span><?php endif; ?>
             <?= View::renderPartial('partials/_expiry_badge', ['date' => $note->expiresAt()]) ?>

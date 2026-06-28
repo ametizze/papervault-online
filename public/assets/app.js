@@ -203,19 +203,75 @@
         });
     }
 
-    // Live row filter: <input data-filter-target="#tbody-selector">
+    // Row filtering: a free-text search (<input data-filter-target="#tbody">)
+    // combined with optional quick-filter chips
+    // (<button data-quick-filter data-filter-target="#tbody"
+    //          data-filter-key="status" data-filter-value="open">).
+    // Both constraints must pass for a row to show; state lives on the tbody.
+    function applyRowFilter(tbody) {
+        var q = (tbody._filterQuery || '').toLowerCase();
+        var key = tbody._qfKey || '';
+        var val = tbody._qfVal || '';
+        tbody.querySelectorAll('tr').forEach(function (row) {
+            var text = (row.getAttribute('data-search') || row.textContent || '').toLowerCase();
+            var textOk = q === '' || text.indexOf(q) !== -1;
+            var chipOk = !key || (row.getAttribute('data-' + key) || '') === val;
+            row.style.display = (textOk && chipOk) ? '' : 'none';
+        });
+    }
     document.querySelectorAll('[data-filter-target]').forEach(function (input) {
         var tbody = document.querySelector(input.getAttribute('data-filter-target'));
         if (!tbody) {
             return;
         }
         input.addEventListener('input', function () {
-            var q = input.value.trim().toLowerCase();
-            tbody.querySelectorAll('tr').forEach(function (row) {
-                var text = (row.getAttribute('data-search') || row.textContent || '').toLowerCase();
-                row.style.display = (q === '' || text.indexOf(q) !== -1) ? '' : 'none';
-            });
+            tbody._filterQuery = input.value.trim();
+            applyRowFilter(tbody);
         });
+    });
+    document.addEventListener('click', function (event) {
+        var chip = event.target.closest('[data-quick-filter]');
+        if (!chip) {
+            return;
+        }
+        event.preventDefault();
+        var tbody = document.querySelector(chip.getAttribute('data-filter-target'));
+        if (!tbody) {
+            return;
+        }
+        var group = chip.closest('[data-quick-filters]');
+        var wasActive = chip.classList.contains('active');
+        if (group) {
+            group.querySelectorAll('[data-quick-filter]').forEach(function (c) { c.classList.remove('active'); });
+        }
+        if (wasActive) {
+            tbody._qfKey = '';
+            tbody._qfVal = '';
+        } else {
+            chip.classList.add('active');
+            tbody._qfKey = chip.getAttribute('data-filter-key') || '';
+            tbody._qfVal = chip.getAttribute('data-filter-value') || '';
+        }
+        applyRowFilter(tbody);
+    });
+
+    // Quick-set a date input to N days from today:
+    // <button data-due-days="7" data-due-target="#some-date-input">
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-due-days]');
+        if (!btn) {
+            return;
+        }
+        event.preventDefault();
+        var target = document.querySelector(btn.getAttribute('data-due-target'));
+        if (!target) {
+            return;
+        }
+        var d = new Date();
+        d.setDate(d.getDate() + parseInt(btn.getAttribute('data-due-days'), 10));
+        target.value = d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
     });
 
     // Drag-reorder custom-field rows. The form submits fields in DOM order, so

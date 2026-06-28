@@ -19,7 +19,7 @@ use SimpleVault\Models\Note;
 <?php if ($notes === []): ?>
     <p class="text-muted">No notes yet.</p>
 <?php else: ?>
-    <div class="row g-2 mb-3">
+    <div class="row g-2 mb-2">
         <div class="col-md-6">
             <div class="input-group">
                 <span class="input-group-text"><i class="bi bi-search"></i></span>
@@ -27,6 +27,15 @@ use SimpleVault\Models\Note;
                        data-filter-target="#notes-tbody" aria-label="Filter notes">
             </div>
         </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-1 mb-3" data-quick-filters>
+        <button type="button" class="btn btn-sm btn-outline-secondary active" data-quick-filter data-filter-target="#notes-tbody">All</button>
+        <?php foreach (Note::STATUSES as $sv => $sl): ?>
+            <button type="button" class="btn btn-sm btn-outline-primary" data-quick-filter data-filter-target="#notes-tbody" data-filter-key="status" data-filter-value="<?= e($sv) ?>"><?= e($sl) ?></button>
+        <?php endforeach; ?>
+        <button type="button" class="btn btn-sm btn-outline-warning" data-quick-filter data-filter-target="#notes-tbody" data-filter-key="due" data-filter-value="soon"><i class="bi bi-clock me-1"></i>Due &le;7d</button>
+        <button type="button" class="btn btn-sm btn-outline-danger" data-quick-filter data-filter-target="#notes-tbody" data-filter-key="due" data-filter-value="overdue"><i class="bi bi-exclamation-triangle me-1"></i>Overdue</button>
     </div>
 
     <form method="post" action="/notes/bulk" id="notes-form">
@@ -68,8 +77,16 @@ use SimpleVault\Models\Note;
                         $note->statusLabel(),
                         implode(' ', $note->tags()),
                     ])));
+                    $due = 'none';
+                    if ($note->expiresAt() !== null) {
+                        $ts = strtotime($note->expiresAt() . ' 23:59:59');
+                        if ($ts !== false) {
+                            $days = (int) floor(($ts - time()) / 86400);
+                            $due = $days < 0 ? 'overdue' : ($days <= 7 ? 'soon' : 'ok');
+                        }
+                    }
                 ?>
-                    <tr data-search="<?= e($search) ?>"<?= $note->archived ? ' class="text-muted"' : '' ?>>
+                    <tr data-search="<?= e($search) ?>" data-status="<?= e($note->status()) ?>" data-due="<?= e($due) ?>"<?= $note->archived ? ' class="text-muted"' : '' ?>>
                         <td>
                             <input type="checkbox" class="form-check-input" name="uuids[]"
                                    value="<?= e($note->uuid) ?>" data-row-check aria-label="Select note">

@@ -80,6 +80,16 @@ test('preview drops javascript links', function () {
     assert_false(str_contains($html, 'javascript:'), 'javascript: scheme must be removed');
 });
 
+test('preview renders task list checkboxes', function () {
+    $preview = new MarkdownPreviewService();
+    $html = $preview->toHtml("- [ ] write spec\n- [x] ship it\n- plain item");
+    assert_true(str_contains($html, 'task-list-item'));
+    assert_true(str_contains($html, '<input type="checkbox" disabled> write spec'));
+    assert_true(str_contains($html, '<input type="checkbox" disabled checked> ship it'));
+    // A normal bullet stays a normal <li>.
+    assert_true(str_contains($html, '<li>plain item</li>'));
+});
+
 test('inline render applies inline markdown without block wrapping', function () {
     $preview = new MarkdownPreviewService();
     $html = $preview->toInline('**bold** [link](https://example.com)');

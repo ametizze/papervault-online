@@ -105,7 +105,13 @@
                     html.push('<ul>');
                     listType = 'ul';
                 }
-                html.push('<li>' + inline(ul[1]) + '</li>');
+                var task = ul[1].match(/^\[([ xX])\]\s+(.*)$/);
+                if (task) {
+                    var checked = task[1].toLowerCase() === 'x' ? ' checked' : '';
+                    html.push('<li class="task-list-item"><input type="checkbox" disabled' + checked + '> ' + inline(task[2]) + '</li>');
+                } else {
+                    html.push('<li>' + inline(ul[1]) + '</li>');
+                }
                 return;
             }
             var ol = trimmed.match(/^\d+\.\s+(.*)$/);

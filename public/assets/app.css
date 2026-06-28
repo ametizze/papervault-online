@@ -200,6 +200,15 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; }
 
 .md-inline > p { display: inline; margin: 0; }
 
+.markdown-body .task-list-item {
+    list-style: none;
+}
+
+.markdown-body .task-list-item input {
+    margin: 0 0.4rem 0 -1.3rem;
+    vertical-align: middle;
+}
+
 /* --- Drag-reorder for custom fields --------------------------------------- */
 [data-drag-handle] {
     cursor: grab;

@@ -81,7 +81,7 @@ final class MarkdownPreviewService
                 continue;
             }
 
-            // Unordered list.
+            // Unordered list, with GitHub-style task list items (- [ ] / - [x]).
             if (preg_match('/^[-*+]\s+(.*)$/', $trimmed, $m)) {
                 $flushParagraph();
                 if ($listType !== 'ul') {
@@ -89,7 +89,12 @@ final class MarkdownPreviewService
                     $html[] = '<ul>';
                     $listType = 'ul';
                 }
-                $html[] = '<li>' . $this->inline($m[1]) . '</li>';
+                if (preg_match('/^\[([ xX])\]\s+(.*)$/', $m[1], $task)) {
+                    $checked = strtolower($task[1]) === 'x' ? ' checked' : '';
+                    $html[] = '<li class="task-list-item"><input type="checkbox" disabled' . $checked . '> ' . $this->inline($task[2]) . '</li>';
+                } else {
+                    $html[] = '<li>' . $this->inline($m[1]) . '</li>';
+                }
                 continue;
             }
 
