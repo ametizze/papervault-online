@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use SimpleVault\Markdown\FilenameSanitizer;
 use SimpleVault\Markdown\MarkdownExportService;
+use SimpleVault\Markdown\MarkdownImportService;
 use SimpleVault\Models\Note;
 
 function make_note(array $payload): Note
@@ -33,6 +34,36 @@ test('export produces front matter and body', function () {
     assert_true(str_contains($md, 'client: "Pixtrive"'));
     assert_true(str_contains($md, "  - \"laravel\""));
     assert_true(str_contains($md, '# Upload Flow'));
+});
+
+test('ticket fields round-trip through export and import', function () {
+    $note = make_note([
+        'title' => 'VPS unreachable',
+        'client' => 'OVH',
+        'project' => 'web',
+        'ticket' => 'INC-1234',
+        'status' => 'in-progress',
+        'expiresAt' => '2027-03-01',
+        'markdown' => '# incident',
+        'tags' => ['urgent'],
+    ]);
+
+    $md = (new MarkdownExportService())->noteToMarkdown($note);
+    assert_true(str_contains($md, 'ticket: "INC-1234"'));
+    assert_true(str_contains($md, 'status: "in-progress"'));
+    assert_true(str_contains($md, 'expires_at: "2027-03-01"'));
+
+    $parsed = (new MarkdownImportService())->parse($md, 'fallback.md');
+    assert_equals('INC-1234', $parsed['ticket']);
+    assert_equals('in-progress', $parsed['status']);
+    assert_equals('2027-03-01', $parsed['expiresAt']);
+});
+
+test('import drops unknown status and malformed expiry', function () {
+    $importer = new MarkdownImportService();
+    $parsed = $importer->parse("---\nstatus: bogus\nexpires_at: not-a-date\n---\nbody", 'x.md');
+    assert_equals('', $parsed['status']);
+    assert_equals('', $parsed['expiresAt']);
 });
 
 test('filename is sanitized and dated', function () {

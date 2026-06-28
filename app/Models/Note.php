@@ -10,6 +10,14 @@ namespace SimpleVault\Models;
  */
 final class Note
 {
+    /** Ticket workflow states (value => label). Empty status means "plain note". */
+    public const STATUSES = [
+        'open' => 'Open',
+        'in-progress' => 'In progress',
+        'resolved' => 'Resolved',
+        'closed' => 'Closed',
+    ];
+
     public function __construct(
         public readonly string $uuid,
         public readonly bool $favorite,
@@ -51,6 +59,34 @@ final class Note
     public function markdown(): string
     {
         return (string) ($this->payload['markdown'] ?? '');
+    }
+
+    /** Ticket number or external reference, if any. */
+    public function ticket(): string
+    {
+        return (string) ($this->payload['ticket'] ?? '');
+    }
+
+    /** Workflow status key, or '' for a plain note. Unknown values normalize to ''. */
+    public function status(): string
+    {
+        $status = (string) ($this->payload['status'] ?? '');
+
+        return isset(self::STATUSES[$status]) ? $status : '';
+    }
+
+    /** Human label for the current status, or '' when none. */
+    public function statusLabel(): string
+    {
+        return self::STATUSES[$this->status()] ?? '';
+    }
+
+    /** Due/expiry date (yyyy-mm-dd), or null. */
+    public function expiresAt(): ?string
+    {
+        $value = (string) ($this->payload['expiresAt'] ?? '');
+
+        return $value !== '' ? $value : null;
     }
 
     /** @return array<int,string> */

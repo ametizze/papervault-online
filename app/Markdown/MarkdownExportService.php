@@ -91,6 +91,9 @@ final class MarkdownExportService
         $lines[] = 'title: ' . $this->yamlString($note->title());
         $lines[] = 'client: ' . $this->yamlString($note->client());
         $lines[] = 'project: ' . $this->yamlString($note->project());
+        $lines[] = 'ticket: ' . $this->yamlString($note->ticket());
+        $lines[] = 'status: ' . $this->yamlString($note->status());
+        $lines[] = 'expires_at: ' . $this->yamlString($note->expiresAt() ?? '');
 
         $tags = $note->tags();
         if ($tags === []) {

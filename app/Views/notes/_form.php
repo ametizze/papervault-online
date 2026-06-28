@@ -37,6 +37,24 @@ $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedb
             <input type="text" name="project" class="form-control" value="<?= $val('project') ?>">
         </div>
 
+        <div class="col-md-4">
+            <label class="form-label">Ticket # / ref</label>
+            <input type="text" name="ticket" class="form-control" value="<?= $val('ticket') ?>" placeholder="e.g. INC-1234">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Status</label>
+            <select name="status" class="form-select">
+                <option value="">&mdash; None &mdash;</option>
+                <?php foreach (\SimpleVault\Models\Note::STATUSES as $sv => $sl): ?>
+                    <option value="<?= e($sv) ?>" <?= ($old['status'] ?? '') === $sv ? 'selected' : '' ?>><?= e($sl) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Expires</label>
+            <input type="date" name="expiresAt" class="form-control" value="<?= $val('expiresAt') ?>">
+        </div>
+
         <?= View::renderPartial('partials/_markdown_field', [
             'mdName' => 'markdown',
             'mdId' => 'note-markdown',

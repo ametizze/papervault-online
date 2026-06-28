@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SimpleVault\Markdown;
 
 use RuntimeException;
+use SimpleVault\Models\Note;
 use ZipArchive;
 
 /**
@@ -29,7 +30,7 @@ final class MarkdownImportService
     /**
      * Parse a single Markdown document into a normalized note payload.
      *
-     * @return array{title:string,client:string,project:string,markdown:string,tags:array<int,string>}
+     * @return array{title:string,client:string,project:string,ticket:string,status:string,expiresAt:string,markdown:string,tags:array<int,string>}
      */
     public function parse(string $content, string $fallbackTitle): array
     {
@@ -47,10 +48,25 @@ final class MarkdownImportService
             $title = $this->titleFromFilename($fallbackTitle);
         }
 
+        $status = is_string($frontMatter['status'] ?? null) ? trim((string) $frontMatter['status']) : '';
+        if (!isset(Note::STATUSES[$status])) {
+            $status = '';
+        }
+        $expiresAt = $this->clampScalar($frontMatter['expires_at'] ?? '', 10);
+        if ($expiresAt !== '') {
+            $date = \DateTimeImmutable::createFromFormat('Y-m-d', $expiresAt);
+            if ($date === false || $date->format('Y-m-d') !== $expiresAt) {
+                $expiresAt = '';
+            }
+        }
+
         return [
             'title' => $this->clampScalar($title, 200),
             'client' => $this->clampScalar($frontMatter['client'] ?? '', 200),
             'project' => $this->clampScalar($frontMatter['project'] ?? '', 200),
+            'ticket' => $this->clampScalar($frontMatter['ticket'] ?? '', 100),
+            'status' => $status,
+            'expiresAt' => $expiresAt,
             'markdown' => $body,
             'tags' => $this->normalizeTags($frontMatter['tags'] ?? []),
         ];

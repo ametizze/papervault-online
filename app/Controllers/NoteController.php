@@ -286,9 +286,32 @@ final class NoteController extends Controller
             'title' => trim($request->string('title')),
             'client' => trim($request->string('client')),
             'project' => trim($request->string('project')),
+            'ticket' => mb_substr(trim($request->string('ticket')), 0, 100),
+            'status' => $this->normalizeStatus($request->string('status')),
+            'expiresAt' => $this->normalizeDate($request->string('expiresAt')),
             'markdown' => $request->string('markdown'),
             'tags' => $this->parseTags($request->string('tags')),
         ];
+    }
+
+    /** Keep only a known status key; anything else (incl. "none") becomes ''. */
+    private function normalizeStatus(string $status): string
+    {
+        $status = trim($status);
+
+        return isset(Note::STATUSES[$status]) ? $status : '';
+    }
+
+    /** Validate a yyyy-mm-dd date from an HTML date input; null if empty/invalid. */
+    private function normalizeDate(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return null;
+        }
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $raw);
+
+        return ($date !== false && $date->format('Y-m-d') === $raw) ? $raw : null;
     }
 
     /** @return array<int,string> */
