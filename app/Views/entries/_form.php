@@ -26,7 +26,9 @@ $fieldRow = static function (string|int $idx, array $field) use ($typeLabels): s
     $n = static fn (string $k): string => 'fields[' . $idx . '][' . $k . ']';
     $type = (string) ($field['type'] ?? 'text');
     ob_start(); ?>
-    <div class="border rounded p-2 mb-2" data-field-row>
+    <div class="border rounded p-2 mb-2 d-flex gap-2 align-items-start" data-field-row>
+        <span class="text-muted pt-1" data-drag-handle title="Drag to reorder" aria-label="Drag to reorder">&#x2630;</span>
+        <div class="flex-grow-1">
         <input type="hidden" name="<?= e($n('id')) ?>" value="<?= e((string) ($field['id'] ?? '')) ?>">
         <div class="row g-2 align-items-center">
             <div class="col-6 col-md-2">
@@ -56,6 +58,7 @@ $fieldRow = static function (string|int $idx, array $field) use ($typeLabels): s
             </div>
         </div>
         <div class="form-text text-danger d-none small" data-dup-warning>Duplicate field name.</div>
+        </div>
     </div>
     <?php return (string) ob_get_clean();
 };

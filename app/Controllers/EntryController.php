@@ -23,6 +23,9 @@ use SimpleVault\Support\Totp;
  */
 final class EntryController extends Controller
 {
+    /** How many prior values to retain per custom field. */
+    private const FIELD_HISTORY_LIMIT = 5;
+
     private CryptoService $crypto;
 
     public function __construct(
@@ -343,6 +346,7 @@ final class EntryController extends Controller
 
             $id = (string) ($item['id'] ?? '');
             $previous = ($id !== '' && isset($previousById[$id])) ? $previousById[$id] : null;
+            $history = [];
             if ($previous !== null) {
                 $changed = $previous['name'] !== $name
                     || $previous['type'] !== $type
@@ -352,6 +356,16 @@ final class EntryController extends Controller
                     || $previous['expiresAt'] !== $expiresAt;
                 $createdAt = $previous['createdAt'] ?? $now;
                 $updatedAt = $changed ? $now : ($previous['updatedAt'] ?? $now);
+
+                // Keep a short trail of prior values when the value changes.
+                $history = $previous['history'] ?? [];
+                if ($previous['value'] !== $value && $previous['value'] !== '') {
+                    array_unshift($history, [
+                        'value' => $previous['value'],
+                        'at' => $previous['updatedAt'] ?? $now,
+                    ]);
+                    $history = array_slice($history, 0, self::FIELD_HISTORY_LIMIT);
+                }
             } else {
                 $id = Uuid::v4();
                 $createdAt = $now;
@@ -368,6 +382,7 @@ final class EntryController extends Controller
                 'expiresAt' => $expiresAt,
                 'createdAt' => $createdAt,
                 'updatedAt' => $updatedAt,
+                'history' => $history,
             ];
         }
 
@@ -424,6 +439,7 @@ final class EntryController extends Controller
             $field['id'] = Uuid::v4();
             $field['createdAt'] = $now;
             $field['updatedAt'] = $now;
+            $field['history'] = [];
             $out[] = $field;
         }
 

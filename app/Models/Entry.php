@@ -74,7 +74,7 @@ final class Entry
      * no id/type/observation/timestamps. Rows with no name, value or
      * observation are dropped.
      *
-     * @return list<array{id:string,name:string,type:string,value:string,secret:bool,observation:string,expiresAt:?string,createdAt:?string,updatedAt:?string}>
+     * @return list<array{id:string,name:string,type:string,value:string,secret:bool,observation:string,expiresAt:?string,createdAt:?string,updatedAt:?string,history:list<array{value:string,at:string}>}>
      */
     public static function normalizeFields(mixed $fields): array
     {
@@ -103,6 +103,19 @@ final class Entry
                 ? (string) $field['expiresAt']
                 : null;
 
+            $history = [];
+            if (isset($field['history']) && is_array($field['history'])) {
+                foreach ($field['history'] as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
+                    }
+                    $history[] = [
+                        'value' => (string) ($entry['value'] ?? ''),
+                        'at' => (string) ($entry['at'] ?? ''),
+                    ];
+                }
+            }
+
             $out[] = [
                 'id' => (isset($field['id']) && is_string($field['id'])) ? $field['id'] : '',
                 'name' => $name,
@@ -113,6 +126,7 @@ final class Entry
                 'expiresAt' => $expiresAt,
                 'createdAt' => isset($field['createdAt']) ? (string) $field['createdAt'] : null,
                 'updatedAt' => isset($field['updatedAt']) ? (string) $field['updatedAt'] : null,
+                'history' => $history,
             ];
         }
 

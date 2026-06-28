@@ -91,6 +91,25 @@ $expiryBadge = static function (?string $date): string {
                 <?php if (!empty($field['updatedAt'])): ?>
                     <div class="text-muted small">Updated <?= e($field['updatedAt']) ?></div>
                 <?php endif; ?>
+                <?php if ($field['history'] !== []): ?>
+                    <details class="small mt-1">
+                        <summary class="text-muted">History (<?= count($field['history']) ?>)</summary>
+                        <ul class="list-unstyled mb-0 mt-1">
+                            <?php foreach ($field['history'] as $j => $h): ?>
+                                <li class="d-flex align-items-center gap-2 mb-1">
+                                    <?php if ($field['secret']): ?>
+                                        <input type="password" id="cfh<?= (int) $i ?>_<?= (int) $j ?>" class="form-control form-control-sm secret-field" style="max-width: 240px;" value="<?= e($h['value']) ?>" readonly>
+                                        <button class="btn btn-sm btn-link p-0" type="button" data-toggle-visibility="#cfh<?= (int) $i ?>_<?= (int) $j ?>">Show</button>
+                                        <button class="btn btn-sm btn-link p-0" type="button" data-copy-target="#cfh<?= (int) $i ?>_<?= (int) $j ?>">Copy</button>
+                                    <?php else: ?>
+                                        <code><?= e($h['value']) ?></code>
+                                    <?php endif; ?>
+                                    <span class="text-muted">&middot; <?= e($h['at']) ?></span>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </details>
+                <?php endif; ?>
             </dd>
         <?php endforeach; ?>
 

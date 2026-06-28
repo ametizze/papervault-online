@@ -13,9 +13,18 @@ $appName = (string) config('app_name', 'SimpleVault');
 $authenticated = Session::isAuthenticated();
 $unlocked = Session::isVaultUnlocked();
 $extraScripts = $extraScripts ?? [];
+
+// Theme is persisted in a cookie and applied server-side so there is no
+// flash of the wrong theme on load and no inline script is needed.
+$themes = ['light' => 'Light', 'dracula' => 'Dracula', 'monokai' => 'Monokai', 'win95' => 'Windows 95'];
+$theme = (string) ($_COOKIE['theme'] ?? 'light');
+if (!isset($themes[$theme])) {
+    $theme = 'light';
+}
+$bsTheme = in_array($theme, ['dracula', 'monokai'], true) ? 'dark' : 'light';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="<?= e($theme) ?>" data-bs-theme="<?= e($bsTheme) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -42,6 +51,11 @@ $extraScripts = $extraScripts ?? [];
                 <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
             </ul>
             <div class="d-flex align-items-center gap-3">
+                <select class="form-select form-select-sm w-auto" data-theme-select aria-label="Theme">
+                    <?php foreach ($themes as $value => $label): ?>
+                        <option value="<?= e($value) ?>" <?= $theme === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+                    <?php endforeach; ?>
+                </select>
                 <span class="vault-state <?= $unlocked ? 'unlocked' : 'locked' ?>">
                     Vault: <?= $unlocked ? 'Unlocked' : 'Locked' ?>
                 </span>

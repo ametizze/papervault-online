@@ -30,6 +30,8 @@
     --bs-link-hover-color-rgb: 67, 56, 202;
     --bs-primary: var(--sv-accent);
     --bs-primary-rgb: 79, 70, 229;
+    --bs-card-bg: var(--sv-surface);
+    --bs-secondary-bg: var(--sv-bg);
 }
 
 body {
@@ -187,6 +189,17 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; }
 
 .md-inline > p { display: inline; margin: 0; }
 
+/* --- Drag-reorder for custom fields --------------------------------------- */
+[data-drag-handle] {
+    cursor: grab;
+    user-select: none;
+}
+
+[data-field-row].dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+}
+
 .secret-field {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -199,3 +212,133 @@ footer.app-footer {
     color: var(--sv-muted);
     font-size: 0.8rem;
 }
+
+/* ===========================================================================
+ * THEMES
+ * Each theme only re-points the --sv-* palette; because the --bs-* tokens in
+ * :root reference those vars, every component re-themes automatically. The
+ * <html> element carries data-theme (and data-bs-theme for dark palettes).
+ * ======================================================================== */
+
+/* --- Dracula -------------------------------------------------------------- */
+[data-theme="dracula"] {
+    --sv-bg: #282a36;
+    --sv-surface: #343746;
+    --sv-border: #44475a;
+    --sv-border-strong: #6272a4;
+    --sv-muted: #a3acc7;
+    --sv-text: #f8f8f2;
+    --sv-accent: #bd93f9;
+    --sv-accent-hover: #a779e9;
+    --bs-link-color-rgb: 189, 147, 249;
+    --bs-link-hover-color-rgb: 167, 121, 233;
+    --bs-primary-rgb: 189, 147, 249;
+}
+
+/* --- Monokai -------------------------------------------------------------- */
+[data-theme="monokai"] {
+    --sv-bg: #272822;
+    --sv-surface: #31322b;
+    --sv-border: #49483e;
+    --sv-border-strong: #75715e;
+    --sv-muted: #a59f85;
+    --sv-text: #f8f8f2;
+    --sv-accent: #a6e22e;
+    --sv-accent-hover: #8fc91f;
+    --bs-link-color-rgb: 166, 226, 46;
+    --bs-link-hover-color-rgb: 143, 201, 31;
+    --bs-primary-rgb: 166, 226, 46;
+}
+
+/* Light-on-dark accents need dark button text for contrast. */
+[data-theme="dracula"] .btn-primary,
+[data-theme="monokai"] .btn-primary {
+    --bs-btn-color: #1b1c1f;
+    --bs-btn-hover-color: #1b1c1f;
+    --bs-btn-active-color: #1b1c1f;
+}
+
+/* --- Windows 95 ----------------------------------------------------------- */
+[data-theme="win95"] {
+    --sv-bg: #008080;        /* teal desktop */
+    --sv-surface: #c0c0c0;   /* classic gray */
+    --sv-border: #808080;
+    --sv-border-strong: #000000;
+    --sv-muted: #404040;
+    --sv-text: #000000;
+    --sv-accent: #000080;    /* navy */
+    --sv-accent-hover: #1084d0;
+    --bs-body-font-family: "MS Sans Serif", "Pixelated MS Sans Serif", Tahoma, "Segoe UI", sans-serif;
+    --bs-body-font-size: 0.85rem;
+    --bs-border-radius: 0;
+    --bs-border-radius-sm: 0;
+    --bs-border-radius-lg: 0;
+    --bs-link-color-rgb: 0, 0, 128;
+    --bs-link-hover-color-rgb: 16, 132, 208;
+}
+
+[data-theme="win95"] body { letter-spacing: 0; }
+
+[data-theme="win95"] .navbar {
+    background-color: #000080 !important;
+    border-bottom: 2px solid #000;
+}
+
+[data-theme="win95"] .navbar-brand,
+[data-theme="win95"] .navbar .nav-link { color: #fff !important; }
+
+[data-theme="win95"] .navbar .nav-link:hover,
+[data-theme="win95"] .navbar .nav-link.active {
+    background-color: #1084d0;
+    color: #fff !important;
+}
+
+/* Beveled, square-cornered chrome. */
+[data-theme="win95"] .card {
+    border: 2px solid;
+    border-color: #ffffff #808080 #808080 #ffffff;
+    box-shadow: 1px 1px 0 #000;
+}
+
+[data-theme="win95"] .card-header {
+    background-color: #000080;
+    color: #fff;
+}
+
+[data-theme="win95"] .btn {
+    border: 2px solid;
+    border-color: #ffffff #000000 #000000 #ffffff;
+    background: #c0c0c0;
+    color: #000;
+    box-shadow: 1px 1px 0 #000;
+    font-weight: 700;
+}
+
+[data-theme="win95"] .btn:active {
+    border-color: #000000 #ffffff #ffffff #000000;
+    box-shadow: none;
+}
+
+[data-theme="win95"] .btn-primary {
+    --bs-btn-bg: #c0c0c0;
+    --bs-btn-color: #000;
+    --bs-btn-hover-bg: #c0c0c0;
+    --bs-btn-hover-color: #000;
+    --bs-btn-active-bg: #c0c0c0;
+}
+
+[data-theme="win95"] .form-control,
+[data-theme="win95"] .form-select {
+    border: 2px solid;
+    border-color: #808080 #ffffff #ffffff #808080;
+    background: #fff;
+    color: #000;
+}
+
+[data-theme="win95"] .form-control:focus,
+[data-theme="win95"] .form-select:focus {
+    box-shadow: none;
+    outline: 1px dotted #000;
+}
+
+[data-theme="win95"] .table > thead th { color: #000; }

@@ -48,6 +48,27 @@ test('parseFields keeps valid expiry dates and discards malformed ones', functio
     assert_equals(null, $out[1]['expiresAt']);
 });
 
+test('parseFields trails prior values in history only when the value changes', function () {
+    $parse = (new ReflectionMethod(EntryController::class, 'parseFields'));
+    $parse->setAccessible(true);
+    $controller = new EntryController();
+
+    $first = $parse->invoke($controller, [['name' => 'db', 'value' => 'v1']], [])[0];
+    assert_equals(0, count($first['history']), 'new fields start with no history');
+
+    $second = $parse->invoke($controller, [
+        ['id' => $first['id'], 'name' => 'db', 'value' => 'v2'],
+    ], [$first['id'] => $first])[0];
+    assert_equals(1, count($second['history']));
+    assert_equals('v1', $second['history'][0]['value']);
+
+    // Saving again without changing the value adds nothing.
+    $third = $parse->invoke($controller, [
+        ['id' => $second['id'], 'name' => 'db', 'value' => 'v2'],
+    ], [$second['id'] => $second])[0];
+    assert_equals(1, count($third['history']));
+});
+
 test('parseFields assigns an id and timestamps to new fields', function () {
     $parse = (new ReflectionMethod(EntryController::class, 'parseFields'));
     $parse->setAccessible(true);

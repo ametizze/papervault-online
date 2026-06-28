@@ -218,6 +218,54 @@
         });
     });
 
+    // Drag-reorder custom-field rows. The form submits fields in DOM order, so
+    // moving a row in the DOM is all that's needed to persist the new order on
+    // save. A row only becomes draggable while its handle is held, so the
+    // inputs inside it stay normally interactive.
+    var draggingRow = null;
+    document.addEventListener('mousedown', function (event) {
+        var handle = event.target.closest('[data-drag-handle]');
+        if (!handle) {
+            return;
+        }
+        var row = handle.closest('[data-field-row]');
+        if (row) {
+            row.setAttribute('draggable', 'true');
+        }
+    });
+    document.addEventListener('dragstart', function (event) {
+        var row = event.target.closest('[data-field-row]');
+        if (!row || row.getAttribute('draggable') !== 'true') {
+            return;
+        }
+        draggingRow = row;
+        row.classList.add('dragging');
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+        }
+    });
+    document.addEventListener('dragover', function (event) {
+        if (!draggingRow) {
+            return;
+        }
+        event.preventDefault();
+        var over = event.target.closest('[data-field-row]');
+        var container = draggingRow.parentNode;
+        if (!over || over === draggingRow || over.parentNode !== container) {
+            return;
+        }
+        var rect = over.getBoundingClientRect();
+        var after = (event.clientY - rect.top) > rect.height / 2;
+        container.insertBefore(draggingRow, after ? over.nextSibling : over);
+    });
+    document.addEventListener('dragend', function () {
+        if (draggingRow) {
+            draggingRow.classList.remove('dragging');
+            draggingRow.removeAttribute('draggable');
+            draggingRow = null;
+        }
+    });
+
     // Flag custom-field rows whose name duplicates another row's name. Defined
     // as a hoisted function so the add/remove handlers above can call it.
     function checkDuplicateFieldNames() {
@@ -312,6 +360,20 @@
         fetchCode();
     }
     document.querySelectorAll('[data-totp]').forEach(initTotp);
+
+    // Theme switcher: <select data-theme-select> writes a year-long cookie and
+    // applies the theme live. The server reads the same cookie on the next load
+    // (so there is no flash), and dark palettes also flip Bootstrap's theme.
+    var themeSelect = document.querySelector('[data-theme-select]');
+    if (themeSelect) {
+        var darkThemes = { dracula: true, monokai: true };
+        themeSelect.addEventListener('change', function () {
+            var value = themeSelect.value;
+            document.cookie = 'theme=' + encodeURIComponent(value) + ';path=/;max-age=31536000;samesite=lax';
+            document.documentElement.setAttribute('data-theme', value);
+            document.documentElement.setAttribute('data-bs-theme', darkThemes[value] ? 'dark' : 'light');
+        });
+    }
 
     // Live tag preview / character counters: <textarea data-counter="#out">
     document.querySelectorAll('[data-counter]').forEach(function (el) {
