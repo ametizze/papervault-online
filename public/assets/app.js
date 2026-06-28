@@ -91,6 +91,47 @@
         });
     });
 
+    // Add a custom-field row by cloning a <template>, giving it a unique index
+    // so its "fields[IDX][...]" inputs stay grouped:
+    //   <button data-add-field="#container" data-template="#tpl">
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-add-field]');
+        if (!btn) {
+            return;
+        }
+        event.preventDefault();
+        var container = document.querySelector(btn.getAttribute('data-add-field'));
+        var tpl = document.querySelector(btn.getAttribute('data-template'));
+        if (!container || !tpl) {
+            return;
+        }
+        var idx = 'new' + Date.now() + Math.floor(Math.random() * 1000);
+        var markup = tpl.innerHTML.replace(/__INDEX__/g, idx);
+        var holder = document.createElement('div');
+        holder.innerHTML = markup.trim();
+        var row = holder.firstElementChild;
+        if (row) {
+            container.appendChild(row);
+            var firstInput = row.querySelector('input[type="text"]');
+            if (firstInput) {
+                firstInput.focus();
+            }
+        }
+    });
+
+    // Remove a dynamic row: <button data-remove-row> inside <... data-field-row>
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('[data-remove-row]');
+        if (!btn) {
+            return;
+        }
+        event.preventDefault();
+        var row = btn.closest('[data-field-row]');
+        if (row) {
+            row.remove();
+        }
+    });
+
     // Password visibility toggles: <button data-toggle-visibility="#selector">
     document.addEventListener('click', function (event) {
         var btn = event.target.closest('[data-toggle-visibility]');

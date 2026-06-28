@@ -52,4 +52,38 @@ final class Entry
 
         return is_array($tags) ? array_values(array_filter(array_map('strval', $tags))) : [];
     }
+
+    /**
+     * Extra named secrets grouped under this entry (e.g. mysql / redis / ssh
+     * passwords for a single server or project). Each one is individually
+     * copyable and optionally masked.
+     *
+     * @return array<int,array{label:string,value:string,secret:bool}>
+     */
+    public function fields(): array
+    {
+        $fields = $this->payload['fields'] ?? [];
+        if (!is_array($fields)) {
+            return [];
+        }
+
+        $out = [];
+        foreach ($fields as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+            $label = isset($field['label']) ? (string) $field['label'] : '';
+            $value = isset($field['value']) ? (string) $field['value'] : '';
+            if ($label === '' && $value === '') {
+                continue;
+            }
+            $out[] = [
+                'label' => $label,
+                'value' => $value,
+                'secret' => !empty($field['secret']),
+            ];
+        }
+
+        return $out;
+    }
 }

@@ -39,6 +39,22 @@ $url = $entry->get('url');
             </div>
         </dd>
 
+        <?php foreach ($entry->fields() as $i => $field): ?>
+            <dt class="col-sm-3"><?= e($field['label']) ?></dt>
+            <dd class="col-sm-9">
+                <?php if ($field['secret']): ?>
+                    <div class="input-group" style="max-width: 420px;">
+                        <input type="password" id="cf<?= (int) $i ?>" class="form-control secret-field" value="<?= e($field['value']) ?>" readonly>
+                        <button class="btn btn-outline-secondary" type="button" data-toggle-visibility="#cf<?= (int) $i ?>">Show</button>
+                        <button class="btn btn-outline-secondary" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
+                    </div>
+                <?php else: ?>
+                    <span id="cf<?= (int) $i ?>"><?= e($field['value']) ?></span>
+                    <button class="btn btn-sm btn-link p-0 ms-2" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
+                <?php endif; ?>
+            </dd>
+        <?php endforeach; ?>
+
         <?php if ($entry->get('client') !== '' || $entry->get('project') !== ''): ?>
             <dt class="col-sm-3">Client / Project</dt>
             <dd class="col-sm-9"><?= e(trim($entry->get('client') . ' / ' . $entry->get('project'), ' /')) ?></dd>

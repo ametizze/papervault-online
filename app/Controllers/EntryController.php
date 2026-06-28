@@ -267,7 +267,41 @@ final class EntryController extends Controller
             'client' => trim($request->string('client')),
             'project' => trim($request->string('project')),
             'tags' => $this->parseTags($request->string('tags')),
+            'fields' => $this->parseFields($request->input('fields', [])),
         ];
+    }
+
+    /**
+     * Normalize the dynamic custom-field rows posted by the entry form. Rows
+     * with neither a label nor a value are dropped. The labelless/empty guard
+     * also discards the hidden template row.
+     *
+     * @return array<int,array{label:string,value:string,secret:bool}>
+     */
+    private function parseFields(mixed $raw): array
+    {
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $fields = [];
+        foreach ($raw as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $label = trim((string) ($item['label'] ?? ''));
+            $value = (string) ($item['value'] ?? '');
+            if ($label === '' && $value === '') {
+                continue;
+            }
+            $fields[] = [
+                'label' => mb_substr($label, 0, 100),
+                'value' => $value,
+                'secret' => filter_var($item['secret'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            ];
+        }
+
+        return $fields;
     }
 
     /** @return array<int,string> */
