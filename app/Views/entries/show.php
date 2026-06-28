@@ -31,8 +31,8 @@ $expiryBadge = static function (?string $date): string {
         <?php endforeach; ?>
     </div>
     <div class="d-flex gap-2">
-        <a class="btn btn-sm btn-outline-primary" href="/entries/<?= e($entry->uuid) ?>/edit">Edit</a>
-        <a class="btn btn-sm btn-outline-secondary" href="/entries">Back</a>
+        <a class="btn btn-sm btn-outline-primary" href="/entries/<?= e($entry->uuid) ?>/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
+        <a class="btn btn-sm btn-outline-secondary" href="/entries"><i class="bi bi-arrow-left me-1"></i>Back</a>
     </div>
 </div>
 
@@ -140,13 +140,13 @@ $expiryBadge = static function (?string $date): string {
         <?= Csrf::field() ?>
         <?php if ($entry->archived): ?>
             <input type="hidden" name="unarchive" value="1">
-            <button class="btn btn-sm btn-outline-success" type="submit">Restore</button>
+            <button class="btn btn-sm btn-outline-success" type="submit"><i class="bi bi-arrow-counterclockwise me-1"></i>Restore</button>
         <?php else: ?>
-            <button class="btn btn-sm btn-outline-warning" type="submit">Archive</button>
+            <button class="btn btn-sm btn-outline-warning" type="submit"><i class="bi bi-archive me-1"></i>Archive</button>
         <?php endif; ?>
     </form>
     <form method="post" action="/entries/<?= e($entry->uuid) ?>/delete" data-confirm="Permanently delete this entry? This cannot be undone.">
         <?= Csrf::field() ?>
-        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+        <button class="btn btn-sm btn-outline-danger" type="submit"><i class="bi bi-trash me-1"></i>Delete</button>
     </form>
 </div>

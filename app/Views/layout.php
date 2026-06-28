@@ -8,6 +8,7 @@
  */
 use SimpleVault\Core\Csrf;
 use SimpleVault\Core\Session;
+use SimpleVault\Core\View;
 
 $appName = (string) config('app_name', 'SimpleVault');
 $authenticated = Session::isAuthenticated();
@@ -31,6 +32,7 @@ $bsTheme = in_array($theme, ['dracula', 'monokai'], true) ? 'dark' : 'light';
     <meta name="robots" content="noindex, nofollow">
     <title><?= e($title) ?> &middot; <?= e($appName) ?></title>
     <link rel="stylesheet" href="/assets/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/bootstrap-icons.css">
     <link rel="stylesheet" href="/assets/app.css">
 </head>
 <body>
@@ -43,38 +45,38 @@ $bsTheme = in_array($theme, ['dracula', 'monokai'], true) ? 'dark' : 'light';
         </button>
         <div class="collapse navbar-collapse" id="nav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="/entries">Passwords</a></li>
-                <li class="nav-item"><a class="nav-link" href="/notes">Notes</a></li>
-                <li class="nav-item"><a class="nav-link" href="/generator">Generator</a></li>
-                <li class="nav-item"><a class="nav-link" href="/import">Import/Export</a></li>
-                <li class="nav-item"><a class="nav-link" href="/settings">Settings</a></li>
+                <li class="nav-item"><a class="nav-link" href="/"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/entries"><i class="bi bi-key me-1"></i>Passwords</a></li>
+                <li class="nav-item"><a class="nav-link" href="/notes"><i class="bi bi-journal-text me-1"></i>Notes</a></li>
+                <li class="nav-item"><a class="nav-link" href="/generator"><i class="bi bi-shuffle me-1"></i>Generator</a></li>
+                <li class="nav-item"><a class="nav-link" href="/import"><i class="bi bi-arrow-down-up me-1"></i>Import/Export</a></li>
+                <li class="nav-item"><a class="nav-link" href="/settings"><i class="bi bi-gear me-1"></i>Settings</a></li>
             </ul>
             <div class="d-flex align-items-center gap-3">
-                <select class="form-select form-select-sm w-auto" data-theme-select aria-label="Theme">
-                    <?php foreach ($themes as $value => $label): ?>
-                        <option value="<?= e($value) ?>" <?= $theme === $value ? 'selected' : '' ?>><?= e($label) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <?= View::renderPartial('partials/_theme_select', ['themes' => $themes, 'theme' => $theme]) ?>
                 <span class="vault-state <?= $unlocked ? 'unlocked' : 'locked' ?>">
-                    Vault: <?= $unlocked ? 'Unlocked' : 'Locked' ?>
+                    <i class="bi bi-<?= $unlocked ? 'unlock' : 'lock' ?>-fill me-1"></i><?= $unlocked ? 'Unlocked' : 'Locked' ?>
                 </span>
                 <?php if ($unlocked): ?>
                     <form method="post" action="/vault/lock" class="m-0">
                         <?= Csrf::field() ?>
-                        <button class="btn btn-sm btn-outline-warning" type="submit">Lock Vault</button>
+                        <button class="btn btn-sm btn-outline-warning" type="submit"><i class="bi bi-lock me-1"></i>Lock Vault</button>
                     </form>
                 <?php else: ?>
-                    <a class="btn btn-sm btn-outline-success" href="/vault/unlock">Unlock</a>
+                    <a class="btn btn-sm btn-outline-success" href="/vault/unlock"><i class="bi bi-unlock me-1"></i>Unlock</a>
                 <?php endif; ?>
                 <form method="post" action="/logout" class="m-0">
                     <?= Csrf::field() ?>
-                    <button class="btn btn-sm btn-outline-secondary" type="submit">Log out</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-box-arrow-right me-1"></i>Log out</button>
                 </form>
             </div>
         </div>
     </div>
 </nav>
+<?php else: ?>
+<div class="container d-flex justify-content-end pt-2">
+    <?= View::renderPartial('partials/_theme_select', ['themes' => $themes, 'theme' => $theme]) ?>
+</div>
 <?php endif; ?>
 
 <main class="container py-3">

@@ -33,7 +33,7 @@ $masterHelp = sprintf((string) ($text['master_password_help'] ?? ''), $minMaster
             </div>
 
             <hr>
-            <h2 class="h6 text-uppercase text-muted">Account (login) password</h2>
+            <h2 class="h6 text-uppercase text-muted"><i class="bi bi-person-badge me-1"></i>Account (login) password</h2>
             <div class="mb-3">
                 <label class="form-label">Account password</label>
                 <input type="password" name="account_password" class="form-control" required>
@@ -42,7 +42,7 @@ $masterHelp = sprintf((string) ($text['master_password_help'] ?? ''), $minMaster
             </div>
 
             <hr>
-            <h2 class="h6 text-uppercase text-muted">Master Password (encrypts your vault)</h2>
+            <h2 class="h6 text-uppercase text-muted"><i class="bi bi-shield-lock me-1"></i>Master Password (encrypts your vault)</h2>
             <div class="mb-3">
                 <label class="form-label">Master Password</label>
                 <input type="password" name="master_password" class="form-control" required>
@@ -70,7 +70,7 @@ $masterHelp = sprintf((string) ($text['master_password_help'] ?? ''), $minMaster
                 <?= $err('recovery_ack') ?>
             </div>
 
-            <button class="btn btn-primary" type="submit">Create account &amp; vault</button>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-shield-plus me-1"></i>Create account &amp; vault</button>
         </form>
     </div>
 </div>

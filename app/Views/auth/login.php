@@ -7,21 +7,27 @@ use SimpleVault\Core\Csrf;
         <h1 class="h3 mb-4 text-center"><?= e(config('app_name')) ?></h1>
         <div class="card">
             <div class="card-body">
-                <h2 class="h5 mb-3">Log in</h2>
+                <h2 class="h5 mb-3"><i class="bi bi-shield-lock me-2"></i>Log in</h2>
                 <form method="post" action="/login" autocomplete="off">
                     <?= Csrf::field() ?>
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" name="email" class="form-control" value="<?= e($old['email'] ?? '') ?>" required autofocus>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email" class="form-control" value="<?= e($old['email'] ?? '') ?>" required autofocus>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
                     </div>
                     <?php if (isset($errors['email'])): ?>
                         <div class="alert alert-danger py-2"><?= e($errors['email']) ?></div>
                     <?php endif; ?>
-                    <button class="btn btn-primary w-100" type="submit">Log in</button>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-box-arrow-in-right me-1"></i>Log in</button>
                 </form>
             </div>
         </div>

@@ -27,7 +27,7 @@ $fieldRow = static function (string|int $idx, array $field) use ($typeLabels): s
     $type = (string) ($field['type'] ?? 'text');
     ob_start(); ?>
     <div class="border rounded p-2 mb-2 d-flex gap-2 align-items-start" data-field-row>
-        <span class="text-muted pt-1" data-drag-handle title="Drag to reorder" aria-label="Drag to reorder">&#x2630;</span>
+        <span class="text-muted pt-1" data-drag-handle title="Drag to reorder" aria-label="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
         <div class="flex-grow-1">
         <input type="hidden" name="<?= e($n('id')) ?>" value="<?= e((string) ($field['id'] ?? '')) ?>">
         <div class="row g-2 align-items-center">
@@ -137,7 +137,7 @@ $fieldRow = static function (string|int $idx, array $field) use ($typeLabels): s
                     <?= $fieldRow($i, $f) ?>
                 <?php endforeach; ?>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-secondary" data-add-field="[data-field-container]" data-template="#custom-field-template">+ Add field</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-add-field="[data-field-container]" data-template="#custom-field-template"><i class="bi bi-plus-lg me-1"></i>Add field</button>
             <template id="custom-field-template">
                 <?= $fieldRow('__INDEX__', ['secret' => true]) ?>
             </template>
@@ -145,7 +145,7 @@ $fieldRow = static function (string|int $idx, array $field) use ($typeLabels): s
     </div>
 
     <div class="mt-4 d-flex gap-2">
-        <button class="btn btn-primary" type="submit">Save</button>
-        <a class="btn btn-outline-secondary" href="/entries">Cancel</a>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg me-1"></i>Save</button>
+        <a class="btn btn-outline-secondary" href="/entries"><i class="bi bi-x-lg me-1"></i>Cancel</a>
     </div>
 </form>

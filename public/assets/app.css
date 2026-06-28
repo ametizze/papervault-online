@@ -116,9 +116,20 @@ h1, h2, h3, h4 { letter-spacing: -0.02em; }
     --bs-btn-active-border-color: var(--sv-accent-hover);
 }
 
-/* --- Forms: subtle borders, indigo focus ring ---------------------------- */
+/* --- Forms: subtle borders, compact controls, indigo focus ring ---------- */
 .form-control, .form-select {
     --bs-border-color: var(--sv-border-strong);
+    font-size: 0.875rem;
+    padding: 0.3rem 0.6rem;
+}
+
+.form-control-sm, .form-select-sm {
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.input-group-text {
+    padding: 0.3rem 0.6rem;
     font-size: 0.875rem;
 }
 
