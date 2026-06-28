@@ -79,3 +79,25 @@ test('preview drops javascript links', function () {
     $html = $preview->toHtml('[click](javascript:alert(1))');
     assert_false(str_contains($html, 'javascript:'), 'javascript: scheme must be removed');
 });
+
+test('inline render applies inline markdown without block wrapping', function () {
+    $preview = new MarkdownPreviewService();
+    $html = $preview->toInline('**bold** [link](https://example.com)');
+    assert_true(str_contains($html, '<strong>bold</strong>'));
+    assert_true(str_contains($html, 'href="https://example.com"'));
+    assert_false(str_contains($html, '<p>'), 'Inline render must not wrap in block elements');
+});
+
+test('inline render escapes raw HTML and collapses newlines', function () {
+    $preview = new MarkdownPreviewService();
+    $html = $preview->toInline("<script>alert(1)</script>\nsecond line");
+    assert_false(str_contains($html, '<script>'), 'Raw script tag must be escaped');
+    assert_true(str_contains($html, '&lt;script&gt;'));
+    assert_false(str_contains($html, "\n"), 'Newlines must collapse to spaces');
+});
+
+test('inline render drops javascript links', function () {
+    $preview = new MarkdownPreviewService();
+    $html = $preview->toInline('[click](javascript:alert(1))');
+    assert_false(str_contains($html, 'javascript:'), 'javascript: scheme must be removed');
+});

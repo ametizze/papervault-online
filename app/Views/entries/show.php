@@ -1,5 +1,5 @@
 <?php
-/** @var \SimpleVault\Models\Entry $entry */
+/** @var \SimpleVault\Models\Entry $entry @var \SimpleVault\Markdown\MarkdownPreviewService $markdown */
 use SimpleVault\Core\Csrf;
 
 $url = $entry->get('url');
@@ -49,7 +49,8 @@ $url = $entry->get('url');
                         <button class="btn btn-outline-secondary" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
                     </div>
                 <?php else: ?>
-                    <span id="cf<?= (int) $i ?>"><?= e($field['value']) ?></span>
+                    <span class="md-inline"><?= $markdown->toInline($field['value']) /* sanitized */ ?></span>
+                    <input type="hidden" id="cf<?= (int) $i ?>" value="<?= e($field['value']) ?>">
                     <button class="btn btn-sm btn-link p-0 ms-2" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
                 <?php endif; ?>
             </dd>
@@ -62,13 +63,20 @@ $url = $entry->get('url');
 
         <?php if ($entry->get('notes') !== ''): ?>
             <dt class="col-sm-3">Notes</dt>
-            <dd class="col-sm-9"><pre class="mb-0" style="white-space: pre-wrap;"><?= e($entry->get('notes')) ?></pre></dd>
+            <dd class="col-sm-9"><div class="markdown-body"><?= $markdown->toHtml($entry->get('notes')) /* sanitized */ ?></div></dd>
         <?php endif; ?>
 
         <dt class="col-sm-3">Updated</dt>
         <dd class="col-sm-9"><small class="text-muted"><?= e($entry->updatedAt) ?></small></dd>
     </dl>
 </div></div>
+
+<?php if ($entry->get('body') !== ''): ?>
+    <div class="card mb-3">
+        <div class="card-header py-2 small text-muted">Details / documentation</div>
+        <div class="card-body markdown-body"><?= $markdown->toHtml($entry->get('body')) /* sanitized */ ?></div>
+    </div>
+<?php endif; ?>
 
 <div class="d-flex gap-2">
     <form method="post" action="/entries/<?= e($entry->uuid) ?>/archive">

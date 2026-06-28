@@ -11,6 +11,7 @@ use SimpleVault\Core\Session;
 use SimpleVault\Core\Uuid;
 use SimpleVault\Core\Validator;
 use SimpleVault\Crypto\CryptoService;
+use SimpleVault\Markdown\MarkdownPreviewService;
 use SimpleVault\Models\Entry;
 use SimpleVault\Repositories\AuditRepository;
 use SimpleVault\Repositories\EntryRepository;
@@ -93,7 +94,10 @@ final class EntryController extends Controller
             return $entry;
         }
 
-        return $this->view('entries/show', ['entry' => $entry], $entry->title());
+        return $this->view('entries/show', [
+            'entry' => $entry,
+            'markdown' => new MarkdownPreviewService(),
+        ], $entry->title());
     }
 
     public function edit(Request $request, array $params): Response
@@ -264,6 +268,7 @@ final class EntryController extends Controller
             'username' => trim($request->string('username')),
             'password' => $request->string('password'),
             'notes' => $request->string('notes'),
+            'body' => $request->string('body'),
             'client' => trim($request->string('client')),
             'project' => trim($request->string('project')),
             'tags' => $this->parseTags($request->string('tags')),

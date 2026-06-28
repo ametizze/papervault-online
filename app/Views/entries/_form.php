@@ -4,6 +4,7 @@
  * @var array $old @var array $errors @var string $action @var string|null $suggestedPassword
  */
 use SimpleVault\Core\Csrf;
+use SimpleVault\Core\View;
 
 $val = fn (string $k): string => e((string) ($old[$k] ?? ''));
 $tagsValue = '';
@@ -94,10 +95,23 @@ $fieldRow = static function (string|int $idx, string $label, string $value, bool
             <input type="text" name="project" class="form-control" value="<?= $val('project') ?>">
         </div>
 
-        <div class="col-12">
-            <label class="form-label">Notes</label>
-            <textarea name="notes" class="form-control" rows="3"><?= e((string) ($old['notes'] ?? '')) ?></textarea>
-        </div>
+        <?= View::renderPartial('partials/_markdown_field', [
+            'mdName' => 'notes',
+            'mdId' => 'entry-notes',
+            'mdValue' => (string) ($old['notes'] ?? ''),
+            'mdLabel' => 'Notes (Markdown)',
+            'mdRows' => 3,
+            'mdError' => $errors['notes'] ?? null,
+        ]) ?>
+
+        <?= View::renderPartial('partials/_markdown_field', [
+            'mdName' => 'body',
+            'mdId' => 'entry-body',
+            'mdValue' => (string) ($old['body'] ?? ''),
+            'mdLabel' => 'Details / documentation (Markdown)',
+            'mdRows' => 10,
+            'mdError' => $errors['body'] ?? null,
+        ]) ?>
 
         <div class="col-12">
             <label class="form-label">Tags (comma separated)</label>

@@ -4,6 +4,7 @@
  * @var array $old @var array $errors @var string $action
  */
 use SimpleVault\Core\Csrf;
+use SimpleVault\Core\View;
 
 $val = fn (string $k): string => e((string) ($old[$k] ?? ''));
 $tagsValue = '';
@@ -36,16 +37,14 @@ $err = fn (string $f): string => isset($errors[$f]) ? '<div class="invalid-feedb
             <input type="text" name="project" class="form-control" value="<?= $val('project') ?>">
         </div>
 
-        <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center">
-                <label class="form-label mb-0">Markdown content</label>
-                <button type="button" class="btn btn-sm btn-outline-secondary" data-md-toggle>Preview</button>
-            </div>
-            <textarea name="markdown" class="form-control font-monospace" rows="16" data-md-source data-counter="#md-count"><?= e((string) ($old['markdown'] ?? '')) ?></textarea>
-            <div class="markdown-body border rounded p-3 mt-2 bg-white d-none" data-md-preview></div>
-            <small class="text-muted"><span id="md-count">0</span> characters. Preview is sanitized; raw HTML is escaped.</small>
-            <?= $err('markdown') ?>
-        </div>
+        <?= View::renderPartial('partials/_markdown_field', [
+            'mdName' => 'markdown',
+            'mdId' => 'note-markdown',
+            'mdValue' => (string) ($old['markdown'] ?? ''),
+            'mdLabel' => 'Markdown content',
+            'mdRows' => 16,
+            'mdError' => $errors['markdown'] ?? null,
+        ]) ?>
 
         <div class="col-12">
             <label class="form-label">Tags (comma separated)</label>

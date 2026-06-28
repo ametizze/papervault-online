@@ -5,8 +5,12 @@
  * never be injected into the preview. This mirrors the server-side
  * MarkdownPreviewService used when displaying a saved note.
  *
- * Wire-up: <textarea data-md-source> and <div data-md-preview>, with an
- * optional <button data-md-toggle> to switch between write and preview.
+ * Wire-up (supports multiple independent editors on one page): each editor
+ * shares a group id across its parts —
+ *   <textarea data-md-source="ID">
+ *   <div data-md-preview="ID">
+ *   <button data-md-toggle="ID">  (optional)
+ * Parts with the same ID value are paired together.
  */
 (function () {
     'use strict';
@@ -127,25 +131,33 @@
         return html.join('\n');
     }
 
-    var source = document.querySelector('[data-md-source]');
-    var preview = document.querySelector('[data-md-preview]');
-    if (!source || !preview) {
-        return;
+    function attrSelector(name, id) {
+        return '[' + name + '="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]';
     }
 
-    function update() {
-        preview.innerHTML = render(source.value);
-    }
-    source.addEventListener('input', update);
-    update();
+    function wire(source) {
+        var id = source.getAttribute('data-md-source');
+        var preview = document.querySelector(attrSelector('data-md-preview', id));
+        if (!preview) {
+            return;
+        }
 
-    var toggle = document.querySelector('[data-md-toggle]');
-    if (toggle) {
-        toggle.addEventListener('click', function (e) {
-            e.preventDefault();
-            var showingPreview = preview.classList.toggle('d-none') === false;
-            source.classList.toggle('d-none', showingPreview);
-            toggle.textContent = showingPreview ? 'Write' : 'Preview';
-        });
+        function update() {
+            preview.innerHTML = render(source.value);
+        }
+        source.addEventListener('input', update);
+        update();
+
+        var toggle = document.querySelector(attrSelector('data-md-toggle', id));
+        if (toggle) {
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                var showingPreview = preview.classList.toggle('d-none') === false;
+                source.classList.toggle('d-none', showingPreview);
+                toggle.textContent = showingPreview ? 'Write' : 'Preview';
+            });
+        }
     }
+
+    document.querySelectorAll('[data-md-source]').forEach(wire);
 })();

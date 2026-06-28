@@ -120,6 +120,20 @@ final class MarkdownPreviewService
     }
 
     /**
+     * Render a short, single-line value with inline Markdown only (links,
+     * bold, italic, inline code) and no block-level wrapping. Useful for
+     * compact places such as custom-field values where a <p>/list block would
+     * be visually wrong. Newlines collapse to spaces. Same escape-first
+     * guarantee as toHtml().
+     */
+    public function toInline(string $markdown): string
+    {
+        $collapsed = preg_replace('/\s*\R\s*/', ' ', $markdown) ?? $markdown;
+
+        return $this->inline(e($collapsed));
+    }
+
+    /**
      * Inline transformations on already-escaped text.
      */
     private function inline(string $text): string
