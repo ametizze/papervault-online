@@ -21,30 +21,41 @@ $customFields = SimpleVault\Models\Entry::normalizeFields($old['fields'] ?? []);
 // Render a single custom-field row. $idx must be unique within the form so the
 // posted "fields[$idx][...]" names stay grouped together. The stable field id
 // travels in a hidden input so the server can preserve per-field timestamps.
-$fieldRow = static function (string|int $idx, array $field): string {
+$typeLabels = ['text' => 'Text', 'password' => 'Password', 'url' => 'URL', 'email' => 'Email', 'totp' => 'TOTP'];
+$fieldRow = static function (string|int $idx, array $field) use ($typeLabels): string {
     $n = static fn (string $k): string => 'fields[' . $idx . '][' . $k . ']';
+    $type = (string) ($field['type'] ?? 'text');
     ob_start(); ?>
     <div class="border rounded p-2 mb-2" data-field-row>
         <input type="hidden" name="<?= e($n('id')) ?>" value="<?= e((string) ($field['id'] ?? '')) ?>">
         <div class="row g-2 align-items-center">
+            <div class="col-6 col-md-2">
+                <select name="<?= e($n('type')) ?>" class="form-select form-select-sm" data-field-type>
+                    <?php foreach ($typeLabels as $tv => $tl): ?>
+                        <option value="<?= e($tv) ?>" <?= $type === $tv ? 'selected' : '' ?>><?= e($tl) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <input type="text" name="<?= e($n('name')) ?>" class="form-control form-control-sm" placeholder="Name (e.g. mysql)" value="<?= e((string) ($field['name'] ?? '')) ?>" data-field-name>
+            </div>
             <div class="col-md-4">
-                <input type="text" name="<?= e($n('name')) ?>" class="form-control" placeholder="Name (e.g. mysql)" value="<?= e((string) ($field['name'] ?? '')) ?>">
+                <input type="text" name="<?= e($n('value')) ?>" class="form-control form-control-sm" placeholder="Value / secret" value="<?= e((string) ($field['value'] ?? '')) ?>" autocomplete="off">
             </div>
-            <div class="col-md-5">
-                <input type="text" name="<?= e($n('value')) ?>" class="form-control" placeholder="Value" value="<?= e((string) ($field['value'] ?? '')) ?>" autocomplete="off">
-            </div>
-            <div class="col-md-3 d-flex align-items-center gap-3">
+            <div class="col-md-3 d-flex align-items-center gap-2">
                 <div class="form-check mb-0">
                     <input type="hidden" name="<?= e($n('secret')) ?>" value="0">
                     <input class="form-check-input" type="checkbox" name="<?= e($n('secret')) ?>" value="1" <?= !empty($field['secret']) ? 'checked' : '' ?>>
-                    <label class="form-check-label">Secret</label>
+                    <label class="form-check-label small">Secret</label>
                 </div>
+                <input type="date" name="<?= e($n('expiresAt')) ?>" class="form-control form-control-sm" title="Expires" value="<?= e((string) ($field['expiresAt'] ?? '')) ?>">
                 <button type="button" class="btn btn-sm btn-outline-danger" data-remove-row aria-label="Remove field">&times;</button>
             </div>
             <div class="col-12">
-                <input type="text" name="<?= e($n('observation')) ?>" class="form-control form-control-sm" placeholder="Observation (optional)" value="<?= e((string) ($field['observation'] ?? '')) ?>">
+                <input type="text" name="<?= e($n('observation')) ?>" class="form-control form-control-sm" placeholder="Observation (optional, Markdown)" value="<?= e((string) ($field['observation'] ?? '')) ?>">
             </div>
         </div>
+        <div class="form-text text-danger d-none small" data-dup-warning>Duplicate field name.</div>
     </div>
     <?php return (string) ob_get_clean();
 };

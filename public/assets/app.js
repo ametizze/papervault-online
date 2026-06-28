@@ -116,6 +116,7 @@
             if (firstInput) {
                 firstInput.focus();
             }
+            checkDuplicateFieldNames();
         }
     });
 
@@ -129,6 +130,7 @@
         var row = btn.closest('[data-field-row]');
         if (row) {
             row.remove();
+            checkDuplicateFieldNames();
         }
     });
 
@@ -215,6 +217,101 @@
             });
         });
     });
+
+    // Flag custom-field rows whose name duplicates another row's name. Defined
+    // as a hoisted function so the add/remove handlers above can call it.
+    function checkDuplicateFieldNames() {
+        var inputs = document.querySelectorAll('[data-field-name]');
+        var counts = {};
+        inputs.forEach(function (input) {
+            var key = input.value.trim().toLowerCase();
+            if (key) {
+                counts[key] = (counts[key] || 0) + 1;
+            }
+        });
+        inputs.forEach(function (input) {
+            var key = input.value.trim().toLowerCase();
+            var dup = !!key && counts[key] > 1;
+            var row = input.closest('[data-field-row]');
+            var warn = row ? row.querySelector('[data-dup-warning]') : null;
+            if (warn) {
+                warn.classList.toggle('d-none', !dup);
+            }
+            input.classList.toggle('is-invalid', dup);
+        });
+    }
+    document.addEventListener('input', function (event) {
+        if (event.target.closest('[data-field-name]')) {
+            checkDuplicateFieldNames();
+        }
+    });
+    checkDuplicateFieldNames();
+
+    // TOTP widgets: fetch the current code on demand from a CSRF-gated endpoint
+    // and count down locally, refetching when the 30s window rolls over. The
+    // base32 secret never reaches the browser — only the rotating code does.
+    // <... data-totp data-totp-url="/entries/{id}/fields/{fieldId}/totp">
+    function initTotp(widget) {
+        var url = widget.getAttribute('data-totp-url');
+        var codeEl = widget.querySelector('[data-totp-code]');
+        var remainEl = widget.querySelector('[data-totp-remaining]');
+        var copyBtn = widget.querySelector('[data-totp-copy]');
+        var tokenEl = document.querySelector('input[name="_csrf"]');
+        var token = tokenEl ? tokenEl.value : '';
+        var current = '';
+        var timer = null;
+
+        function startCountdown(remaining) {
+            if (timer) {
+                clearInterval(timer);
+            }
+            function tick() {
+                if (remainEl) {
+                    remainEl.textContent = remaining + 's';
+                }
+                if (remaining <= 0) {
+                    clearInterval(timer);
+                    fetchCode();
+                    return;
+                }
+                remaining -= 1;
+            }
+            tick();
+            timer = setInterval(tick, 1000);
+        }
+
+        function fetchCode() {
+            return fetch(url, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: '_csrf=' + encodeURIComponent(token)
+            }).then(function (res) {
+                return res.ok ? res.json() : Promise.reject(new Error('failed'));
+            }).then(function (data) {
+                current = (data && data.code) || '';
+                if (codeEl) {
+                    codeEl.textContent = current ? current.replace(/(\d{3})(\d{3})/, '$1 $2') : 'error';
+                }
+                startCountdown((data && data.remaining) || 0);
+            }).catch(function () {
+                if (codeEl) {
+                    codeEl.textContent = 'error';
+                }
+            });
+        }
+
+        if (copyBtn) {
+            copyBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                copyToClipboard(current)
+                    .then(function () { flashButton(copyBtn, 'Copied!'); })
+                    .catch(function () { flashButton(copyBtn, 'Failed'); });
+            });
+        }
+        fetchCode();
+    }
+    document.querySelectorAll('[data-totp]').forEach(initTotp);
 
     // Live tag preview / character counters: <textarea data-counter="#out">
     document.querySelectorAll('[data-counter]').forEach(function (el) {

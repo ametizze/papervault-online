@@ -65,13 +65,16 @@ final class Entry
         return self::normalizeFields($this->payload['fields'] ?? []);
     }
 
+    /** Field value types that drive how a custom field is rendered. */
+    public const FIELD_TYPES = ['text', 'password', 'url', 'email', 'totp'];
+
     /**
      * Canonicalize the raw "fields" payload into a stable shape, tolerating
      * older records: pre-rename entries stored the name under "label" and had
-     * no id/observation/timestamps. Rows with no name, value or observation
-     * are dropped.
+     * no id/type/observation/timestamps. Rows with no name, value or
+     * observation are dropped.
      *
-     * @return list<array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:?string,updatedAt:?string}>
+     * @return list<array{id:string,name:string,type:string,value:string,secret:bool,observation:string,expiresAt:?string,createdAt:?string,updatedAt:?string}>
      */
     public static function normalizeFields(mixed $fields): array
     {
@@ -90,12 +93,24 @@ final class Entry
             if ($name === '' && $value === '' && $observation === '') {
                 continue;
             }
+            $type = (string) ($field['type'] ?? 'text');
+            if (!in_array($type, self::FIELD_TYPES, true)) {
+                $type = 'text';
+            }
+            // password and totp values are always treated as secret.
+            $secret = !empty($field['secret']) || in_array($type, ['password', 'totp'], true);
+            $expiresAt = isset($field['expiresAt']) && (string) $field['expiresAt'] !== ''
+                ? (string) $field['expiresAt']
+                : null;
+
             $out[] = [
                 'id' => (isset($field['id']) && is_string($field['id'])) ? $field['id'] : '',
                 'name' => $name,
+                'type' => $type,
                 'value' => $value,
-                'secret' => !empty($field['secret']),
+                'secret' => $secret,
                 'observation' => $observation,
+                'expiresAt' => $expiresAt,
                 'createdAt' => isset($field['createdAt']) ? (string) $field['createdAt'] : null,
                 'updatedAt' => isset($field['updatedAt']) ? (string) $field['updatedAt'] : null,
             ];

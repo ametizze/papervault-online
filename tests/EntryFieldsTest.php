@@ -23,6 +23,31 @@ test('normalizeFields drops rows with no name, value or observation', function (
     assert_equals('keep', $fields[0]['name']);
 });
 
+test('normalizeFields defaults unknown types to text and forces secret for password/totp', function () {
+    $fields = Entry::normalizeFields([
+        ['name' => 'a', 'value' => 'x', 'type' => 'bogus'],
+        ['name' => 'b', 'value' => 'x', 'type' => 'password', 'secret' => false],
+        ['name' => 'c', 'value' => 'x', 'type' => 'totp', 'secret' => false],
+        ['name' => 'd', 'value' => 'x', 'type' => 'url'],
+    ]);
+    assert_equals('text', $fields[0]['type']);
+    assert_true($fields[1]['secret'], 'password implies secret');
+    assert_true($fields[2]['secret'], 'totp implies secret');
+    assert_equals('url', $fields[3]['type']);
+    assert_false($fields[3]['secret']);
+});
+
+test('parseFields keeps valid expiry dates and discards malformed ones', function () {
+    $parse = (new ReflectionMethod(EntryController::class, 'parseFields'));
+    $parse->setAccessible(true);
+    $out = $parse->invoke(new EntryController(), [
+        ['name' => 'cert', 'value' => 'x', 'expiresAt' => '2027-01-15'],
+        ['name' => 'key', 'value' => 'x', 'expiresAt' => 'not-a-date'],
+    ], []);
+    assert_equals('2027-01-15', $out[0]['expiresAt']);
+    assert_equals(null, $out[1]['expiresAt']);
+});
+
 test('parseFields assigns an id and timestamps to new fields', function () {
     $parse = (new ReflectionMethod(EntryController::class, 'parseFields'));
     $parse->setAccessible(true);

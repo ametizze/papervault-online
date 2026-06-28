@@ -26,7 +26,7 @@ $extraScripts = $extraScripts ?? [];
 </head>
 <body>
 <?php if ($authenticated): ?>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
         <a class="navbar-brand" href="/"><?= e($appName) ?></a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
@@ -55,7 +55,7 @@ $extraScripts = $extraScripts ?? [];
                 <?php endif; ?>
                 <form method="post" action="/logout" class="m-0">
                     <?= Csrf::field() ?>
-                    <button class="btn btn-sm btn-outline-light" type="submit">Log out</button>
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">Log out</button>
                 </form>
             </div>
         </div>
@@ -63,7 +63,7 @@ $extraScripts = $extraScripts ?? [];
 </nav>
 <?php endif; ?>
 
-<main class="container py-4">
+<main class="container py-3">
     <?php foreach ($flash as $message): ?>
         <div class="alert alert-<?= e($message['type']) ?> alert-dismissible fade show" role="alert">
             <?= e($message['message']) ?>

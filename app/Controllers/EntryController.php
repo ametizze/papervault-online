@@ -16,6 +16,7 @@ use SimpleVault\Models\Entry;
 use SimpleVault\Repositories\AuditRepository;
 use SimpleVault\Repositories\EntryRepository;
 use SimpleVault\Support\PasswordGenerator;
+use SimpleVault\Support\Totp;
 
 /**
  * CRUD for encrypted password entries. All routes require an unlocked vault.
@@ -223,6 +224,27 @@ final class EntryController extends Controller
     }
 
     /**
+     * Return the current TOTP code for a "totp" custom field, computed on
+     * demand. The base32 secret itself never leaves the server — only the
+     * rotating code and the seconds left in the window are returned.
+     */
+    public function fieldTotp(Request $request, array $params): Response
+    {
+        $field = $this->findField((string) $params['id'], (string) $params['fieldId']);
+        if ($field === null || $field['type'] !== 'totp') {
+            return Response::json(['error' => 'not_found'], 404);
+        }
+        if (!Totp::isValidSecret($field['value'])) {
+            return Response::json(['error' => 'invalid_secret'], 422);
+        }
+
+        $this->audit->log($this->userId(), 'entry_totp_generated', $request->ip, $request->userAgent);
+
+        return Response::json(Totp::generate($field['value']))
+            ->withHeader('Cache-Control', 'no-store');
+    }
+
+    /**
      * Apply an action (archive/unarchive/delete) to many selected entries.
      */
     public function bulk(Request $request): Response
@@ -311,15 +333,23 @@ final class EntryController extends Controller
             if ($name === '' && $value === '' && $observation === '') {
                 continue;
             }
-            $secret = filter_var($item['secret'] ?? false, FILTER_VALIDATE_BOOLEAN);
+            $type = (string) ($item['type'] ?? 'text');
+            if (!in_array($type, Entry::FIELD_TYPES, true)) {
+                $type = 'text';
+            }
+            $secret = filter_var($item['secret'] ?? false, FILTER_VALIDATE_BOOLEAN)
+                || in_array($type, ['password', 'totp'], true);
+            $expiresAt = $this->normalizeDate((string) ($item['expiresAt'] ?? ''));
 
             $id = (string) ($item['id'] ?? '');
             $previous = ($id !== '' && isset($previousById[$id])) ? $previousById[$id] : null;
             if ($previous !== null) {
                 $changed = $previous['name'] !== $name
+                    || $previous['type'] !== $type
                     || $previous['value'] !== $value
                     || $previous['secret'] !== $secret
-                    || $previous['observation'] !== $observation;
+                    || $previous['observation'] !== $observation
+                    || $previous['expiresAt'] !== $expiresAt;
                 $createdAt = $previous['createdAt'] ?? $now;
                 $updatedAt = $changed ? $now : ($previous['updatedAt'] ?? $now);
             } else {
@@ -331,15 +361,53 @@ final class EntryController extends Controller
             $fields[] = [
                 'id' => $id,
                 'name' => $name,
+                'type' => $type,
                 'value' => $value,
                 'secret' => $secret,
                 'observation' => $observation,
+                'expiresAt' => $expiresAt,
                 'createdAt' => $createdAt,
                 'updatedAt' => $updatedAt,
             ];
         }
 
         return $fields;
+    }
+
+    /** Validate a yyyy-mm-dd date from an HTML date input; null if empty/invalid. */
+    private function normalizeDate(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return null;
+        }
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $raw);
+
+        return ($date !== false && $date->format('Y-m-d') === $raw) ? $raw : null;
+    }
+
+    /**
+     * Locate a single custom field by id within one of the user's entries.
+     *
+     * @return array{id:string,name:string,type:string,value:string,secret:bool,observation:string,expiresAt:?string,createdAt:?string,updatedAt:?string}|null
+     */
+    private function findField(string $uuid, string $fieldId): ?array
+    {
+        if (!Uuid::isValid($uuid) || $fieldId === '') {
+            return null;
+        }
+        $row = $this->entries->findForUser($this->userId(), $uuid);
+        if ($row === null) {
+            return null;
+        }
+        $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
+        foreach (Entry::normalizeFields($payload['fields'] ?? []) as $field) {
+            if ($field['id'] === $fieldId) {
+                return $field;
+            }
+        }
+
+        return null;
     }
 
     /**

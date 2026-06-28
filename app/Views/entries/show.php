@@ -3,6 +3,25 @@
 use SimpleVault\Core\Csrf;
 
 $url = $entry->get('url');
+
+// Render an expiry badge for a field, or '' when it has no expiry date.
+$expiryBadge = static function (?string $date): string {
+    if ($date === null || $date === '') {
+        return '';
+    }
+    $ts = strtotime($date . ' 23:59:59');
+    if ($ts === false) {
+        return '';
+    }
+    $days = (int) floor(($ts - time()) / 86400);
+    if ($days < 0) {
+        return '<span class="badge text-bg-danger">expired ' . e($date) . '</span>';
+    }
+    if ($days <= 14) {
+        return '<span class="badge text-bg-warning">expires in ' . $days . 'd</span>';
+    }
+    return '<span class="badge text-bg-light text-muted">expires ' . e($date) . '</span>';
+};
 ?>
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
@@ -40,10 +59,20 @@ $url = $entry->get('url');
         </dd>
 
         <?php foreach ($entry->fields() as $i => $field): ?>
-            <dt class="col-sm-3"><?= e($field['name']) ?></dt>
+            <dt class="col-sm-3"><?= e($field['name']) ?> <span class="badge text-bg-light text-muted fw-normal"><?= e($field['type']) ?></span></dt>
             <dd class="col-sm-9">
-                <?php if ($field['secret']): ?>
-                    <div class="input-group" style="max-width: 420px;">
+                <?php if ($field['type'] === 'totp'): ?>
+                    <div class="d-inline-flex align-items-center gap-2" data-totp data-totp-url="/entries/<?= e($entry->uuid) ?>/fields/<?= e($field['id']) ?>/totp">
+                        <code class="fs-5" data-totp-code>······</code>
+                        <span class="badge rounded-pill text-bg-secondary" data-totp-remaining title="seconds left">–</span>
+                        <button class="btn btn-sm btn-outline-secondary" type="button" data-totp-copy>Copy</button>
+                    </div>
+                <?php elseif ($field['type'] === 'url' && filter_var($field['value'], FILTER_VALIDATE_URL)): ?>
+                    <a href="<?= e($field['value']) ?>" target="_blank" rel="noopener noreferrer nofollow"><?= e($field['value']) ?></a>
+                <?php elseif ($field['type'] === 'email' && $field['value'] !== ''): ?>
+                    <a href="mailto:<?= e($field['value']) ?>"><?= e($field['value']) ?></a>
+                <?php elseif ($field['secret']): ?>
+                    <div class="input-group input-group-sm" style="max-width: 420px;">
                         <input type="password" id="cf<?= (int) $i ?>" class="form-control secret-field" value="<?= e($field['value']) ?>" readonly>
                         <button class="btn btn-outline-secondary" type="button" data-toggle-visibility="#cf<?= (int) $i ?>">Show</button>
                         <button class="btn btn-outline-secondary" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
@@ -52,6 +81,9 @@ $url = $entry->get('url');
                     <span class="md-inline"><?= $markdown->toInline($field['value']) /* sanitized */ ?></span>
                     <input type="hidden" id="cf<?= (int) $i ?>" value="<?= e($field['value']) ?>">
                     <button class="btn btn-sm btn-link p-0 ms-2" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
+                <?php endif; ?>
+                <?php if ($badge = $expiryBadge($field['expiresAt'])): ?>
+                    <span class="ms-2"><?= $badge /* pre-escaped */ ?></span>
                 <?php endif; ?>
                 <?php if ($field['observation'] !== ''): ?>
                     <div class="text-muted small mt-1 md-inline"><?= $markdown->toInline($field['observation']) /* sanitized */ ?></div>
