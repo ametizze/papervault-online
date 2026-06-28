@@ -121,12 +121,15 @@ final class EntryController extends Controller
             return $this->notFound();
         }
 
+        $oldPayload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
+        $previousById = $this->fieldsById($oldPayload);
+
         $validator = Validator::make($request->body)
             ->required('title', 'Title')
             ->maxLength('title', 200, 'Title');
 
         if ($validator->fails()) {
-            $payload = $this->payloadFromRequest($request);
+            $payload = $this->payloadFromRequest($request, $previousById);
             return $this->view('entries/edit', [
                 'entry' => Entry::fromRow($row, $payload),
                 'errors' => $validator->errors(),
@@ -134,7 +137,7 @@ final class EntryController extends Controller
             ], 'Edit Password');
         }
 
-        $payload = $this->payloadFromRequest($request);
+        $payload = $this->payloadFromRequest($request, $previousById);
         $encrypted = $this->crypto->encryptJson($payload, $this->vaultKey());
 
         $this->entries->update($this->userId(), (string) $params['id'], $encrypted['ciphertext'], $encrypted['nonce'], $request->boolean('favorite'));
@@ -184,6 +187,7 @@ final class EntryController extends Controller
 
         $payload = $this->crypto->decryptJson($row['encrypted_payload'], $row['payload_nonce'], $this->vaultKey());
         $payload['title'] = mb_substr((string) ($payload['title'] ?? 'Untitled') . ' (copy)', 0, 200);
+        $payload['fields'] = $this->freshFields($payload['fields'] ?? []);
 
         $encrypted = $this->crypto->encryptJson($payload, $this->vaultKey());
         $newUuid = Uuid::v4();
@@ -258,9 +262,12 @@ final class EntryController extends Controller
     // --- Helpers -----------------------------------------------------------
 
     /**
+     * @param array<string,array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:?string,updatedAt:?string}> $previousById
+     *        Existing custom fields keyed by id, used to preserve per-field
+     *        timestamps across an edit.
      * @return array<string,mixed>
      */
-    private function payloadFromRequest(Request $request): array
+    private function payloadFromRequest(Request $request, array $previousById = []): array
     {
         return [
             'title' => trim($request->string('title')),
@@ -272,41 +279,105 @@ final class EntryController extends Controller
             'client' => trim($request->string('client')),
             'project' => trim($request->string('project')),
             'tags' => $this->parseTags($request->string('tags')),
-            'fields' => $this->parseFields($request->input('fields', [])),
+            'fields' => $this->parseFields($request->input('fields', []), $previousById),
         ];
     }
 
     /**
      * Normalize the dynamic custom-field rows posted by the entry form. Rows
-     * with neither a label nor a value are dropped. The labelless/empty guard
-     * also discards the hidden template row.
+     * with no name, value and observation are dropped (this also discards the
+     * inert template row). Each field carries a stable id and createdAt; the
+     * updatedAt stamp only moves when the field's contents actually change,
+     * matched against $previousById by id.
      *
-     * @return array<int,array{label:string,value:string,secret:bool}>
+     * @param array<string,array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:?string,updatedAt:?string}> $previousById
+     * @return list<array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:string,updatedAt:string}>
      */
-    private function parseFields(mixed $raw): array
+    private function parseFields(mixed $raw, array $previousById = []): array
     {
         if (!is_array($raw)) {
             return [];
         }
 
+        $now = now_iso();
         $fields = [];
         foreach ($raw as $item) {
             if (!is_array($item)) {
                 continue;
             }
-            $label = trim((string) ($item['label'] ?? ''));
+            $name = mb_substr(trim((string) ($item['name'] ?? '')), 0, 100);
             $value = (string) ($item['value'] ?? '');
-            if ($label === '' && $value === '') {
+            $observation = mb_substr(trim((string) ($item['observation'] ?? '')), 0, 500);
+            if ($name === '' && $value === '' && $observation === '') {
                 continue;
             }
+            $secret = filter_var($item['secret'] ?? false, FILTER_VALIDATE_BOOLEAN);
+
+            $id = (string) ($item['id'] ?? '');
+            $previous = ($id !== '' && isset($previousById[$id])) ? $previousById[$id] : null;
+            if ($previous !== null) {
+                $changed = $previous['name'] !== $name
+                    || $previous['value'] !== $value
+                    || $previous['secret'] !== $secret
+                    || $previous['observation'] !== $observation;
+                $createdAt = $previous['createdAt'] ?? $now;
+                $updatedAt = $changed ? $now : ($previous['updatedAt'] ?? $now);
+            } else {
+                $id = Uuid::v4();
+                $createdAt = $now;
+                $updatedAt = $now;
+            }
+
             $fields[] = [
-                'label' => mb_substr($label, 0, 100),
+                'id' => $id,
+                'name' => $name,
                 'value' => $value,
-                'secret' => filter_var($item['secret'] ?? false, FILTER_VALIDATE_BOOLEAN),
+                'secret' => $secret,
+                'observation' => $observation,
+                'createdAt' => $createdAt,
+                'updatedAt' => $updatedAt,
             ];
         }
 
         return $fields;
+    }
+
+    /**
+     * Re-stamp custom fields for a duplicated entry: a fresh id and timestamps
+     * so the copy does not share field identity with the original.
+     *
+     * @return list<array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:string,updatedAt:string}>
+     */
+    private function freshFields(mixed $fields): array
+    {
+        $now = now_iso();
+        $out = [];
+        foreach (Entry::normalizeFields($fields) as $field) {
+            $field['id'] = Uuid::v4();
+            $field['createdAt'] = $now;
+            $field['updatedAt'] = $now;
+            $out[] = $field;
+        }
+
+        return $out;
+    }
+
+    /**
+     * Index an entry's existing custom fields by id, for timestamp diffing.
+     *
+     * @param array<string,mixed> $payload
+     * @return array<string,array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:?string,updatedAt:?string}>
+     */
+    private function fieldsById(array $payload): array
+    {
+        $map = [];
+        foreach (Entry::normalizeFields($payload['fields'] ?? []) as $field) {
+            if ($field['id'] !== '') {
+                $map[$field['id']] = $field;
+            }
+        }
+
+        return $map;
     }
 
     /** @return array<int,string> */

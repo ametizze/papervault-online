@@ -40,7 +40,7 @@ $url = $entry->get('url');
         </dd>
 
         <?php foreach ($entry->fields() as $i => $field): ?>
-            <dt class="col-sm-3"><?= e($field['label']) ?></dt>
+            <dt class="col-sm-3"><?= e($field['name']) ?></dt>
             <dd class="col-sm-9">
                 <?php if ($field['secret']): ?>
                     <div class="input-group" style="max-width: 420px;">
@@ -52,6 +52,12 @@ $url = $entry->get('url');
                     <span class="md-inline"><?= $markdown->toInline($field['value']) /* sanitized */ ?></span>
                     <input type="hidden" id="cf<?= (int) $i ?>" value="<?= e($field['value']) ?>">
                     <button class="btn btn-sm btn-link p-0 ms-2" type="button" data-copy-target="#cf<?= (int) $i ?>">Copy</button>
+                <?php endif; ?>
+                <?php if ($field['observation'] !== ''): ?>
+                    <div class="text-muted small mt-1 md-inline"><?= $markdown->toInline($field['observation']) /* sanitized */ ?></div>
+                <?php endif; ?>
+                <?php if (!empty($field['updatedAt'])): ?>
+                    <div class="text-muted small">Updated <?= e($field['updatedAt']) ?></div>
                 <?php endif; ?>
             </dd>
         <?php endforeach; ?>

@@ -58,11 +58,23 @@ final class Entry
      * passwords for a single server or project). Each one is individually
      * copyable and optionally masked.
      *
-     * @return array<int,array{label:string,value:string,secret:bool}>
+     * @return list<array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:?string,updatedAt:?string}>
      */
     public function fields(): array
     {
-        $fields = $this->payload['fields'] ?? [];
+        return self::normalizeFields($this->payload['fields'] ?? []);
+    }
+
+    /**
+     * Canonicalize the raw "fields" payload into a stable shape, tolerating
+     * older records: pre-rename entries stored the name under "label" and had
+     * no id/observation/timestamps. Rows with no name, value or observation
+     * are dropped.
+     *
+     * @return list<array{id:string,name:string,value:string,secret:bool,observation:string,createdAt:?string,updatedAt:?string}>
+     */
+    public static function normalizeFields(mixed $fields): array
+    {
         if (!is_array($fields)) {
             return [];
         }
@@ -72,15 +84,20 @@ final class Entry
             if (!is_array($field)) {
                 continue;
             }
-            $label = isset($field['label']) ? (string) $field['label'] : '';
-            $value = isset($field['value']) ? (string) $field['value'] : '';
-            if ($label === '' && $value === '') {
+            $name = (string) ($field['name'] ?? $field['label'] ?? '');
+            $value = (string) ($field['value'] ?? '');
+            $observation = (string) ($field['observation'] ?? '');
+            if ($name === '' && $value === '' && $observation === '') {
                 continue;
             }
             $out[] = [
-                'label' => $label,
+                'id' => (isset($field['id']) && is_string($field['id'])) ? $field['id'] : '',
+                'name' => $name,
                 'value' => $value,
                 'secret' => !empty($field['secret']),
+                'observation' => $observation,
+                'createdAt' => isset($field['createdAt']) ? (string) $field['createdAt'] : null,
+                'updatedAt' => isset($field['updatedAt']) ? (string) $field['updatedAt'] : null,
             ];
         }
 
